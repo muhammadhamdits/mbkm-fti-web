@@ -2,7 +2,7 @@ import {
   Paper
 } from '@mui/material'
 
-const Home = () => {
+const Program = () => {
   return (
     <Paper
       sx={{
@@ -16,4 +16,4 @@ const Home = () => {
   )
 }
 
-export default Home
+export default Program

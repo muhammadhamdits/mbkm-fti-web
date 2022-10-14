@@ -5,25 +5,12 @@ import {
   Button,
   CssBaseline,
   TextField,
-  Link,
   Box,
   Typography,
   Container
 } from '@mui/material'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
-
-const Copyright = (props) => {
-  return (
-    <Typography variant="body2" color="text.secondary" align="center" {...props}>
-      {'Copyright © '}
-      <Link color="inherit" href="http://si.fti.unand.ac.id">
-        Sistem Informasi - Universitas Andalas
-      </Link>{' '}
-      {new Date().getFullYear()}
-      {'.'}
-    </Typography>
-  )
-}
+import Copyright from '../components/Copyright'
 
 const theme = createTheme()
 
