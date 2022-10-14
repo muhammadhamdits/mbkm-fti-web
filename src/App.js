@@ -1,19 +1,17 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
-import DefaultLayout from './layouts/DefaultLayout'
-import HomePage from './pages/Home'
-import LogBookPage from './pages/Logbook'
 import LoginPage from './pages/Login'
-import ProgramDetailPage from './pages/ProgramDetail'
+import DashboardLayout from './layouts/Dashboard'
+import Home from './pages/Home'
+import Program from './pages/Program'
 
 const App = () => {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<DefaultLayout />}>
-          <Route index element={<HomePage />} />
-          <Route path="programs/:id" element={<ProgramDetailPage />} />
-          <Route path="logbooks" element={<LogBookPage />} />
+        <Route path="/" element={<DashboardLayout />}>
+          <Route index element={<Home />} />
+          <Route path="/programs" element={<Program />} />
         </Route>
       </Routes>
     </BrowserRouter>
