@@ -11,10 +11,16 @@ import {
   Avatar,
   Box,
   Chip,
-  ListItemButton
+  ListItemButton,
+  InputBase,
+  IconButton,
+  Divider
 } from '@mui/material'
-import { CheckCircle, DangerousRounded, Download, Lock, Upload, RemoveCircle } from '@mui/icons-material'
+import { CheckCircle, DangerousRounded, Download, Lock, Upload, RemoveCircle, Send } from '@mui/icons-material'
 import Accordion from '../components/Accordion'
+import MenuIcon from '@mui/icons-material/Menu'
+import SearchIcon from '@mui/icons-material/Search'
+import DirectionsIcon from '@mui/icons-material/Directions'
 
 const MyProgram = () => {  
   return (
@@ -116,6 +122,62 @@ const MyProgram = () => {
               <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                 Feedback
               </Typography>
+              <Box sx={{ maxHeight: 160, overflowY: 'scroll' }} >
+                <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                  <ListItem sx={{
+                    width: '67%',
+                    marginLeft: '30%',
+                    bgcolor: '#ddd',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    marginBottom: 1 }}>
+                    <ListItemText
+                      primary='Ini salah tarok ini, seharusnya di CPMK Data Mining, perbaiki lagi ya' />
+                  </ListItem>
+                  <ListItem sx={{ 
+                    width: '67%',
+                    bgcolor: '#ddd',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    paddingLeft: 1,
+                    marginBottom: 1 }}>
+                    <ListItemText
+                      primary="Halo pak, saya sudah menyelesaikan tugasnya" />
+                  </ListItem>
+                  <ListItem sx={{
+                    width: '67%',
+                    marginLeft: '30%',
+                    bgcolor: '#ddd',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    marginBottom: 1 }}>
+                    <ListItemText
+                      primary='Ok, terimakasih' />
+                  </ListItem>
+                  <ListItem sx={{
+                    width: '67%',
+                    bgcolor: '#ddd',
+                    paddingTop: 0,
+                    paddingBottom: 0,
+                    marginBottom: 1 }}>
+                    <ListItemText
+                      primary='Sama-sama Pak' />
+                  </ListItem>
+                </List>
+              </Box>
+              <Paper
+                component="form"
+                sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%' }}
+              >
+                <InputBase
+                  sx={{ ml: 1, flex: 1 }}
+                  placeholder="Berikan tanggapan"
+                  inputProps={{ 'aria-label': 'search google maps' }}
+                />
+                <IconButton color="primary" sx={{ p: '10px' }} aria-label="send">
+                  <Send />
+                </IconButton>
+              </Paper>
             </Paper>
           </Grid>
         </Grid>
