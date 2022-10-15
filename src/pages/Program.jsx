@@ -11,7 +11,6 @@ const Program = () => {
         flexDirection: 'column'
       }}
     >
-      Test
     </Paper>
   )
 }
