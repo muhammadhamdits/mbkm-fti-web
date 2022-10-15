@@ -6,15 +6,7 @@ import {
 } from '@mui/material'
 import ListItem from '../components/ListItem'
 
-const Program = () => {
-  const data = {
-    programType: 'Student Exchange',
-    programTitle: 'Pertukaran Pelajar',
-    agencyName: 'Harvard University',
-    description: 'lorem ipsum dolor sit amet',
-    agencyImage: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Harvard_shield_wreath.svg/1200px-Harvard_shield_wreath.svg.png'
-  }
-  
+const Program = () => {  
   return (
     <Grid container spacing={2}>
       <Grid item xs={12} md={7} lg={8}>
