@@ -4,8 +4,10 @@ import AccordionDetails from '@mui/material/AccordionDetails'
 import AccordionSummary from '@mui/material/AccordionSummary'
 import Typography from '@mui/material/Typography'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
+import { Box, Chip, LinearProgress, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
+import { AccountTree, ArrowRight } from '@mui/icons-material'
 
-export default function ControlledAccordions() {
+const ControlledAccordions = () => {
   const [expanded, setExpanded] = React.useState(false)
 
   const handleChange = (panel) => (event, isExpanded) => {
@@ -13,23 +15,63 @@ export default function ControlledAccordions() {
   }
 
   return (
-    <div>
+    <Box>
       <Accordion expanded={expanded === 'panel1'} onChange={handleChange('panel1')}>
         <AccordionSummary
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1bh-content"
           id="panel1bh-header"
+          alignItems="center"
         >
           <Typography sx={{ width: '33%', flexShrink: 0 }}>
-            General settings
+            Dasar-dasar Pemrograman
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>I am an accordion</Typography>
+          <Chip label="4 SKS" color="primary" size="small" sx={{ marginLeft: 2 }}/>
+          <Chip label="Disetujui" color="success" size="small" sx={{ marginLeft: 1 }}/>
         </AccordionSummary>
         <AccordionDetails>
-          <Typography>
-            Nulla facilisi. Phasellus sollicitudin nulla et quam mattis feugiat.
-            Aliquam eget maximus est, id dignissim quam.
+          <Typography variant='body2'>
+            Total jam konversi: <b>24 jam 17 menit</b> dari <b>48 jam</b>
           </Typography>
+          <LinearProgress 
+            variant="determinate" 
+            value={ ((24/48)+((17/60)/48))*100 } 
+            sx={{ width: '100%', marginTop: 1 }} />
+          <Typography variant='body1' sx={{ marginTop: 3 }}>
+            Daftar CPMK:
+          </Typography>
+          <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+            <ListItem sx={{ padding: 0}}>
+              <ListItemIcon>
+                <ArrowRight sx={{ padding: 0 }} />
+              </ListItemIcon>
+              <ListItemText>
+                <Typography variant='overline'>
+                  Membuat program sederhana
+                </Typography>
+              </ListItemText>
+            </ListItem>
+            <ListItem sx={{ padding: 0}}>
+              <ListItemIcon>
+                <ArrowRight sx={{ padding: 0 }} />
+              </ListItemIcon>
+              <ListItemText>
+                <Typography variant='overline'>
+                  Merancang Struktur Data
+                </Typography>
+              </ListItemText>
+            </ListItem>
+            <ListItem sx={{ padding: 0}}>
+              <ListItemIcon>
+                <ArrowRight sx={{ padding: 0 }} />
+              </ListItemIcon>
+              <ListItemText>
+                <Typography variant='overline'>
+                  Melakukan komputasi cloud
+                </Typography>
+              </ListItemText>
+            </ListItem>
+          </List>
         </AccordionDetails>
       </Accordion>
       <Accordion expanded={expanded === 'panel2'} onChange={handleChange('panel2')}>
@@ -38,10 +80,11 @@ export default function ControlledAccordions() {
           aria-controls="panel2bh-content"
           id="panel2bh-header"
         >
-          <Typography sx={{ width: '33%', flexShrink: 0 }}>Users</Typography>
-          <Typography sx={{ color: 'text.secondary' }}>
-            You are currently not an owner
+          <Typography sx={{ width: '33%', flexShrink: 0 }}>
+            Data Mining
           </Typography>
+          <Chip label="3 SKS" color="primary" size="small" sx={{ marginLeft: 2 }}/>
+          <Chip label="Ditolak" color="error" size="small" sx={{ marginLeft: 1 }}/>
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
@@ -58,11 +101,10 @@ export default function ControlledAccordions() {
           id="panel3bh-header"
         >
           <Typography sx={{ width: '33%', flexShrink: 0 }}>
-            Advanced settings
+            Praktikum Pemrograman Web
           </Typography>
-          <Typography sx={{ color: 'text.secondary' }}>
-            Filtering has been entirely disabled for whole web server
-          </Typography>
+          <Chip label="1 SKS" color="primary" size="small" sx={{ marginLeft: 2 }}/>
+          <Chip label="Diajukan" color="secondary" size="small" sx={{ marginLeft: 1 }}/>
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
@@ -77,7 +119,11 @@ export default function ControlledAccordions() {
           aria-controls="panel4bh-content"
           id="panel4bh-header"
         >
-          <Typography sx={{ width: '33%', flexShrink: 0 }}>Personal data</Typography>
+          <Typography sx={{ width: '33%', flexShrink: 0 }}>
+            Pemrograman Web
+          </Typography>
+          <Chip label="2 SKS" color="primary" size="small" sx={{ marginLeft: 2 }}/>
+          <Chip label="Disetujui" color="success" size="small" sx={{ marginLeft: 1 }}/>
         </AccordionSummary>
         <AccordionDetails>
           <Typography>
@@ -86,6 +132,8 @@ export default function ControlledAccordions() {
           </Typography>
         </AccordionDetails>
       </Accordion>
-    </div>
+    </Box>
   )
 }
+
+export default ControlledAccordions

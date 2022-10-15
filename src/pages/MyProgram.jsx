@@ -47,7 +47,7 @@ const MyProgram = () => {
           <Grid container spacing={2} alignItems="center" sx={{ marginBottom: 1 }}>
             <Grid item xs={6}>
               <Typography variant='caption'>
-                Total SKS: 19 dari 20
+                Total SKS: 10 dari 20
               </Typography>
             </Grid>
             <Grid item xs={6}>
