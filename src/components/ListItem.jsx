@@ -11,7 +11,7 @@ const ListItem = ({ icon, path, name }) => {
 
   return (
     <ListItemButton
-      selected={ pathname == path }
+      selected={ pathname === path }
       onClick={ () => navigate(path) }
     >
       <ListItemIcon>
