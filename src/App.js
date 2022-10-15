@@ -4,6 +4,7 @@ import DashboardLayout from './layouts/Dashboard'
 import Home from './pages/Home'
 import Program from './pages/Program'
 import MyProgram from './pages/MyProgram'
+import Logbook from './pages/Logbook'
 
 const App = () => {
   return (
@@ -14,6 +15,7 @@ const App = () => {
           <Route index element={<Home />} />
           <Route path="/programs/1" element={<Program />} />
           <Route path="/my-programs/1" element={<MyProgram />} />
+          <Route path="/logbooks/1" element={<Logbook />} />
         </Route>
       </Routes>
     </BrowserRouter>
