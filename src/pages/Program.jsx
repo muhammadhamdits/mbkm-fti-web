@@ -17,7 +17,7 @@ const Program = () => {
             flexDirection: 'column'
           }}
         >
-          <Typography variant='h5'>
+          <Typography variant='h6'>
             Detail Program - Pertukaran Pelajar
           </Typography>
 
@@ -56,7 +56,7 @@ const Program = () => {
                 flexDirection: 'column'
               }}
             >
-              <Button variant='contained'>
+              <Button variant='contained' size="large">
                 Daftar Pada Program Ini
               </Button>
               <Typography variant='body2' sx={{ marginTop: 2, alignSelf: 'center' }}>

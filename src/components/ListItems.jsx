@@ -7,7 +7,7 @@ const ListItems = () => {
   return (
     <React.Fragment>
       <ListItemButton icon={ <HomeIcon /> } path='/' name='Home'/>
-      <ListItemButton icon={ <Collections /> } path='/programs' name='Program'/>
+      <ListItemButton icon={ <Collections /> } path='/my-programs/1' name='Program'/>
     </React.Fragment>
   )
 }
