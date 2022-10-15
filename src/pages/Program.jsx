@@ -17,7 +17,7 @@ const Program = () => {
             flexDirection: 'column'
           }}
         >
-          <Typography variant='h5'>
+          <Typography variant='h6'>
             Detail Program - Pertukaran Pelajar
           </Typography>
 

@@ -8,9 +8,10 @@ import {
   ListItem,
   List,
   Avatar,
-  Box
+  Box,
+  Chip
 } from '@mui/material'
-import { WorkspacePremium } from '@mui/icons-material'
+import { Download, Lock, Upload, WorkspacePremium } from '@mui/icons-material'
 import Accordion from '../components/Accordion'
 
 const MyProgram = () => {  
@@ -24,7 +25,7 @@ const MyProgram = () => {
             flexDirection: 'column'
           }}
         >
-          <Typography variant='h5'>
+          <Typography variant='h6'>
             Program Saya - Backend Developer Intern
           </Typography>
 
@@ -71,47 +72,48 @@ const MyProgram = () => {
                 flexDirection: 'column'
               }}
             >
-              <Button variant='contained'>
-                Daftar Pada Program Ini
+              <Typography variant='h6'>
+                Status
+              </Typography>
+              <Chip label="Disetujui" color="success" size="small" sx={{ marginTop: 1 }}/>
+              <Typography variant='caption' align="center">
+                Menunggu upload bukti penerimaan dari instansi terkait oleh mahasiswa
+              </Typography>
+
+              <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                Dokumen Rekomendasi PA
+              </Typography>
+              <Button variant='outlined' color='primary' size="small" startIcon={<Download />}>
+                Unduh
               </Button>
-              <Typography variant='body2' sx={{ marginTop: 2, alignSelf: 'center' }}>
-                Pendaftaran ditutup dalam: <b>2 Hari lagi</b>
+
+              <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                Dokumen Penerimaan Instansi
               </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper
-              sx={{
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              <Typography variant='h6'>
-                Tentang Pertukaran Pelajar
+              <Button variant='outlined' color='primary' size="small" startIcon={<Upload />}>
+                Unggah
+              </Button>
+
+              <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                Dokumen Laporan Akhir
               </Typography>
-              <Typography variant='body2' sx={{ marginTop: 2 }}>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Odit, exercitationem doloribus.
+              <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
+                Terkunci
+              </Button>
+
+              <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                Dokumen Poster
               </Typography>
-            </Paper>
-          </Grid>
-          <Grid item xs={12}>
-            <Paper
-              sx={{
-                p: 2,
-                display: 'flex',
-                flexDirection: 'column'
-              }}
-            >
-              <Typography variant='h6'>
-                Tentang Harvard University
+              <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
+                Terkunci
+              </Button>
+
+              <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                Rekap Nilai
               </Typography>
-              <Typography variant='caption'>
-                Jl. Limau Manis No. 1, Kec. Kebayoran Baru, Kota Jakarta Selatan, Daerah Khusus Ibukota Jakarta 12160
-              </Typography>
-              <Typography variant='body2' sx={{ marginTop: 2 }}>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit. Beatae temporibus hic sapiente! Soluta possimus natus nam quas ad! Neque perspiciatis dolorem vitae enim? Laboriosam, recusandae. Quisquam, quod. Quisquam, quod.
-              </Typography>
+              <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
+                Terkunci
+              </Button>
             </Paper>
           </Grid>
         </Grid>
