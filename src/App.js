@@ -6,6 +6,8 @@ import Program from './pages/Program'
 import MyProgram from './pages/MyProgram'
 import Logbook from './pages/Logbook'
 import ProgramTable from './pages/ProgramTable'
+import CourseTable from './pages/CourseTable'
+import ProgramTypeTable from './pages/ProgramTypeTable'
 
 const App = () => {
   return (
@@ -18,6 +20,8 @@ const App = () => {
           <Route path="/my-programs/1" element={<MyProgram />} />
           <Route path="/logbooks/1" element={<Logbook />} />
           <Route path="/programs" element={<ProgramTable />} />
+          <Route path="/courses" element={<CourseTable />} />
+          <Route path="/program-types" element={<ProgramTypeTable />} />
         </Route>
       </Routes>
     </BrowserRouter>

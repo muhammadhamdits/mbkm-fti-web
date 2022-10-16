@@ -65,7 +65,7 @@ const EnhancedTableToolbar = () => {
         id="tableTitle"
         component="div"
       >
-        Program List
+        Daftar Program
       </Typography>
       <Tooltip title="Tampah Program">
         <IconButton color="primary">
