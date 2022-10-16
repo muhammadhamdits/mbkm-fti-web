@@ -164,7 +164,7 @@ const DashboardLayout = () => {
           </Toolbar>
           <Divider />
           <List component="nav">
-            <ListItems />
+            <ListItems user={user} />
           </List>
         </Drawer>
         <Box
