@@ -12,11 +12,15 @@ import {
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import Copyright from '../components/Copyright'
 import axios from 'axios'
+import secureLocalStorage from 'react-secure-storage'
+import { useNavigate } from 'react-router-dom'
 
 const theme = createTheme()
 
 const LoginPage = () => {
   const baseUrl = process.env.REACT_APP_API_URL
+  const navigate = useNavigate()
+  const token = secureLocalStorage.getItem('token')
   const [error, setError] = React.useState('')
 
   const handleSubmit = async (event) => {
@@ -28,11 +32,18 @@ const LoginPage = () => {
         username: data.get('username'),
         password: data.get('password')
       })
-      // Httponly setcookie to baseurl path
+      secureLocalStorage.setItem('token', response.data.token)
+      navigate('/')
     } catch (e) {
       setError(true)
     }
   }
+
+  React.useEffect(() => {
+    if (token) navigate('/')
+  })
+
+  if (token) return (<></>)
 
   return (
     <ThemeProvider theme={theme}>
