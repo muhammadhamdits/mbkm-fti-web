@@ -11,17 +11,27 @@ import {
 } from '@mui/material'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import Copyright from '../components/Copyright'
+import axios from 'axios'
 
 const theme = createTheme()
 
 const LoginPage = () => {
-  const handleSubmit = (event) => {
+  const baseUrl = process.env.REACT_APP_API_URL
+  const [error, setError] = React.useState('')
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    })
+
+    try {
+      const response = await axios.post(`${baseUrl}/login`, {
+        username: data.get('username'),
+        password: data.get('password')
+      })
+      // Httponly setcookie to baseurl path
+    } catch (e) {
+      setError(true)
+    }
   }
 
   return (
@@ -63,6 +73,11 @@ const LoginPage = () => {
               id="password"
               autoComplete="current-password"
             />
+            {error &&
+              <Typography variant='body2' color='error' >
+                Username/Password is incorrect
+              </Typography>
+            }
             <Button
               type="submit"
               fullWidth
