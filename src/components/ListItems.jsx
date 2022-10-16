@@ -12,6 +12,7 @@ const ListItems = () => {
       <ListItemButton icon={ <School /> } path='/programs' name='Program'/>
       <ListItemButton icon={ <School /> } path='/courses' name='Courses'/>
       <ListItemButton icon={ <School /> } path='/program-types' name='Program Type'/>
+      <ListItemButton icon={ <School /> } path='/student-programs' name='Student Program'/>
     </React.Fragment>
   )
 }
