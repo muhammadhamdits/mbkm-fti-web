@@ -1,36 +1,62 @@
 import * as React from 'react'
 import { List, ListItem, ListItemText, ListItemIcon } from '@mui/material'
-import { Apartment, Assessment, Filter5, WorkspacePremium } from '@mui/icons-material'
+import { Apartment, Assessment, Filter1, Filter2, Filter3, Filter4, Filter5, Filter6, RemoveCircle, WorkspacePremium, Filter7, Filter8, MapsHomeWork } from '@mui/icons-material'
+import BroadcastOnPersonalIcon from '@mui/icons-material/BroadcastOnPersonal'
+import { capitalize } from '../assets/utils'
 
-export default function FolderList() {
+const ListFolder = ({ program }) => {
   return (
     <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
       <ListItem>
         <ListItemIcon sx={{ color: 'primary.main' }}>
-          <WorkspacePremium />
+          { program.isCertified ? <WorkspacePremium /> : <RemoveCircle /> }
         </ListItemIcon>
-        <ListItemText
-          primary="Bersertifikat"
-          secondary="Kamu akan menerima sertifikat setelah menyelesaikan program ini." />
+        {
+          <ListItemText
+            primary={`${!program.isCertified ? 'Tidak ' : ''}Bersertifikat`}
+            secondary={`Kamu${!program.isCertified ? ' tidak' : ''} akan menerima sertifikat setelah menyelesaikan program ini.`}
+          />
+        }
       </ListItem>
       <ListItem>
         <ListItemIcon sx={{ color: 'primary.main' }}>
-          <Apartment />
+          {
+            program.placement === 'remote' ? <BroadcastOnPersonalIcon /> :
+            program.placement === 'hybrid' ? <MapsHomeWork /> :
+            <Apartment />
+          }
         </ListItemIcon>
-        <ListItemText primary="On-Site" secondary="Kamu akan melaksanakan kegiatan secara on-site." />
+        <ListItemText 
+          primary={capitalize(program.placement)}
+          secondary={`Kamu akan melaksanakan kegiatan secara ${program.placement}.`} />
       </ListItem>
       <ListItem>
-        <ListItemIcon>
-          <Filter5 sx={{ color: 'primary.main' }} />
+        <ListItemIcon sx={{ color: 'primary.main' }}>
+          {
+            program.minTerms === 1 ? <Filter1 /> : 
+            program.minTerms === 2 ? <Filter2 /> :
+            program.minTerms === 3 ? <Filter3 /> :
+            program.minTerms === 4 ? <Filter4 /> :
+            program.minTerms === 5 ? <Filter5 /> :
+            program.minTerms === 6 ? <Filter6 /> :
+            program.minTerms === 7 ? <Filter7 /> :
+            <Filter8 />
+          }
         </ListItemIcon>
-        <ListItemText primary="Semester 5" secondary="Setidaknya kamu harus berada pada semester 5 untuk mengikuti program ini." />
+        <ListItemText 
+          primary={`Semester ${program.minTerms}`} 
+          secondary={`Setidaknya kamu harus berada pada semester ${program.minTerms} untuk mengikuti program ini.`} />
       </ListItem>
       <ListItem>
         <ListItemIcon>
           <Assessment sx={{ color: 'primary.main' }} />
         </ListItemIcon>
-        <ListItemText primary="20 SKS" secondary="Kamu dapat mengkonversi hingga paling banyak 20 SKS" />
+        <ListItemText 
+          primary={`${program.sksCount} SKS`} 
+          secondary={`Kamu dapat mengkonversi hingga paling banyak ${program.sksCount} SKS`} />
       </ListItem>
     </List>
   )
 }
+
+export default ListFolder

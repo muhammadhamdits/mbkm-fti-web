@@ -87,7 +87,7 @@ const DashboardLayout = () => {
       })
       setUser(response.data.user)
     } catch (e) {
-      setUser(null)
+      setUser('error')
       secureLocalStorage.removeItem('token')
       return (<></>)
     }
@@ -181,7 +181,7 @@ const DashboardLayout = () => {
         >
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Outlet user={user} />
+            <Outlet context={user} />
             <Copyright sx={{ pt: 4 }} />
           </Container>
         </Box>
