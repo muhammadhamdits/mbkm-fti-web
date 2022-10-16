@@ -1,63 +1,216 @@
-import {
-  Paper,
-  Grid,
-  Typography,
-  Box,
-  Button
-} from '@mui/material'
-import Card from '../components/Card'
-import Table from '../components/Table'
+import * as React from 'react'
+import PropTypes from 'prop-types'
+import { alpha } from '@mui/material/styles'
+import Box from '@mui/material/Box'
+import Table from '@mui/material/Table'
+import TableBody from '@mui/material/TableBody'
+import TableCell from '@mui/material/TableCell'
+import TableContainer from '@mui/material/TableContainer'
+import TableHead from '@mui/material/TableHead'
+import TablePagination from '@mui/material/TablePagination'
+import TableRow from '@mui/material/TableRow'
+import TableSortLabel from '@mui/material/TableSortLabel'
+import Toolbar from '@mui/material/Toolbar'
+import Typography from '@mui/material/Typography'
+import Paper from '@mui/material/Paper'
+import Checkbox from '@mui/material/Checkbox'
+import IconButton from '@mui/material/IconButton'
+import Tooltip from '@mui/material/Tooltip'
+import FormControlLabel from '@mui/material/FormControlLabel'
+import Switch from '@mui/material/Switch'
+import DeleteIcon from '@mui/icons-material/Delete'
+import FilterListIcon from '@mui/icons-material/FilterList'
+import { visuallyHidden } from '@mui/utils'
+import { AddOutlined, DeleteOutline, EditOutlined } from '@mui/icons-material'
+import { Button, Chip } from '@mui/material'
 
-const ProgramTable = () => {
-  const datas = [
-    {
-      programType: 'Magang Bersertifikat',
-      programTitle: 'Backend Developer Intern',
-      agencyName: 'Bukalapak',
-      description: 'lorem ipsum dolor sit amet consectetur adipisicing elit. Quisquam, quod.',
-      agencyImage: 'https://res.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_256,w_256,f_auto,q_auto:eco,dpr_1/wgwdrf8fsk9fnc2wngdf'
-    },
-    {
-      programType: 'Studi Independen',
-      programTitle: 'Teknik Sipil',
-      agencyName: 'Universitas Indonesia',
-      description: 'lorem ipsum dolor sit amet',
-      agencyImage: 'https://upload.wikimedia.org/wikipedia/id/thumb/0/0f/Makara_of_Universitas_Indonesia.svg/1200px-Makara_of_Universitas_Indonesia.svg.png'
-    },
-    {
-      programType: 'Magang Bersertifikat',
-      programTitle: 'Digital Marketing Intern',
-      agencyName: 'Tokopedia',
-      description: 'lorem ipsum dolor sit amet',
-      agencyImage: 'https://play-lh.googleusercontent.com/KFde1iTB5pC3jKwYhuvOKbxyfbnjxqY6V6_HBOkJMOzPQ7j0qo7HnfOrYA-TuBv-iYoj'
-    },
-    {
-      programType: 'Student Exchange',
-      programTitle: 'Pertukaran Pelajar',
-      agencyName: 'Harvard University',
-      description: 'lorem ipsum dolor sit amet',
-      agencyImage: 'https://upload.wikimedia.org/wikipedia/en/thumb/2/29/Harvard_shield_wreath.svg/1200px-Harvard_shield_wreath.svg.png'
-    }
-  ]
-
+const EnhancedTableHead = () => {
   return (
-    <Paper
+    <TableHead>
+      <TableRow>
+        <TableCell >
+          #
+        </TableCell>
+        <TableCell>
+          Nama Program
+        </TableCell>
+        <TableCell >
+          Jenis Program
+        </TableCell>
+        <TableCell >
+          Nama Instansi
+        </TableCell>
+        <TableCell >
+          Status
+        </TableCell>
+        <TableCell >
+          Action
+        </TableCell>
+      </TableRow>
+    </TableHead>
+  )
+}
+
+const EnhancedTableToolbar = () => {
+  return (
+    <Toolbar
       sx={{
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column'
+        pl: { sm: 2 },
+        pr: { xs: 1, sm: 1 }
       }}
     >
-      <Typography variant='h6'>
-        List Program
+      <Typography
+        sx={{ flex: '1 1 100%' }}
+        variant="h6"
+        id="tableTitle"
+        component="div"
+      >
+        Program List
       </Typography>
-      <Box sx={{ justifyContent: 'flex-end', display: 'flex' }}>
-        <Button variant='contained' color='primary'>
-          Tambah Program
-        </Button>
-      </Box>
-      <Table />
-    </Paper>
+      <Tooltip title="Tampah Program">
+        <IconButton color="primary">
+          <AddOutlined />
+          <Typography variant="button" sx={{ ml: 1 }}>
+            Tambah
+          </Typography>
+        </IconButton>
+      </Tooltip>
+    </Toolbar>
+  )
+}
+
+const ProgramTable = () => {
+  return (
+    <Box sx={{ width: '100%' }}>
+      <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
+        <EnhancedTableToolbar />
+        <TableContainer>
+          <Table
+            sx={{ minWidth: 750 }}
+            aria-labelledby="tableTitle"
+            size="small"
+          >
+            <EnhancedTableHead />
+            <TableBody>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='success' size='small'>
+                    Aktif
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='secondary' size='small'>
+                    Diusulkan
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='primary' size='small'>
+                    Sedang Berjalan
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='error' size='small'>
+                    Ditolak
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='warning' size='small'>
+                    Ditutup
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+              <TableRow hover >
+                <TableCell>1</TableCell>
+                <TableCell>Backend Developer Intern</TableCell>
+                <TableCell>Magang Bersertifikat</TableCell>
+                <TableCell>Gojek</TableCell>
+                <TableCell>
+                  <Button variant='contained' color='info' size='small'>
+                    Selesai
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  <IconButton color='warning'>
+                    <EditOutlined />
+                  </IconButton>
+                  <IconButton color='error'>
+                    <DeleteOutline />
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            </TableBody>
+          </Table>
+        </TableContainer>
+      </Paper>
+    </Box>
   )
 }
 
