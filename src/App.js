@@ -8,6 +8,7 @@ import Logbook from './pages/Logbook'
 import ProgramTable from './pages/ProgramTable'
 import CourseTable from './pages/CourseTable'
 import ProgramTypeTable from './pages/ProgramTypeTable'
+import StudentProgramTable from './pages/StudentProgramTable'
 
 const App = () => {
   return (
@@ -22,6 +23,7 @@ const App = () => {
           <Route path="/programs" element={<ProgramTable />} />
           <Route path="/courses" element={<CourseTable />} />
           <Route path="/program-types" element={<ProgramTypeTable />} />
+          <Route path="/student-programs" element={<StudentProgramTable />} />
         </Route>
       </Routes>
     </BrowserRouter>
