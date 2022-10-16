@@ -4,7 +4,8 @@ import {
 } from '@mui/material'
 import Card from '../components/Card'
 
-const Home = () => {
+const Home = (props) => {
+  const { user } = props
   const datas = [
     {
       programType: 'Magang Bersertifikat',

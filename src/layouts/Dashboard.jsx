@@ -10,6 +10,8 @@ import {
   Divider,
   IconButton,
   Badge,
+  MenuItem,
+  Menu
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -20,14 +22,81 @@ import AppBar from '../components/AppBar'
 import Copyright from '../components/Copyright'
 import Drawer from '../components/Drawer'
 import { Outlet } from 'react-router-dom'
+import secureLocalStorage from 'react-secure-storage'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
 
 const mdTheme = createTheme()
 
-const DashboardLayout = () => {
-  const [open, setOpen] = React.useState(false)
-  const toggleDrawer = () => {
-    setOpen(!open)
+const BasicMenu = (props) => {
+  const [anchorEl, setAnchorEl] = React.useState(null)
+  const open = Boolean(anchorEl)
+  const navigate = useNavigate()
+
+  const handleClick = (event) => { setAnchorEl(event.currentTarget) }
+  const handleClose = () => { setAnchorEl(null) }
+  const handleLogout = () => {
+    secureLocalStorage.removeItem('token')
+    navigate('/login')
   }
+
+  return (
+    <>
+      <IconButton
+        color="inherit"
+        id="basic-button"
+        aria-controls={open ? 'basic-menu' : undefined}
+        aria-haspopup="true"
+        aria-expanded={open ? 'true' : undefined}
+        onClick={handleClick}
+      >
+        <UserIcon />
+        <Typography sx={{ ml: 1 }} variant="button" noWrap component="div">
+          { props.user.username }
+        </Typography>
+      </IconButton>
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{
+          'aria-labelledby': 'basic-button',
+        }}
+      >
+        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+      </Menu>
+    </>
+  )
+}
+
+const DashboardLayout = () => {
+  const baseUrl = process.env.REACT_APP_API_URL
+  const navigate = useNavigate()
+  const token = secureLocalStorage.getItem('token')
+  const [open, setOpen] = React.useState(false)
+  const [user, setUser] = React.useState(null)
+
+  const toggleDrawer = () => { setOpen(!open) }
+
+  const decodeToken = async (token) => {
+    setUser('loading')
+    try {
+      const response = await axios.post(`${baseUrl}/decode`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUser(response.data.user)
+    } catch (e) {
+      setUser(null)
+      secureLocalStorage.removeItem('token')
+      return (<></>)
+    }
+  }
+
+  React.useEffect(() => { if (!token || !user) navigate('/login') })
+
+  if (!token) return (<></>)
+  else if(!user) decodeToken(token)
 
   return (
     <ThemeProvider theme={mdTheme}>
@@ -65,9 +134,7 @@ const DashboardLayout = () => {
                 <NotificationsIcon />
               </Badge>
             </IconButton>
-            <IconButton color="inherit">
-              <UserIcon />
-            </IconButton>
+            <BasicMenu user={user} />
           </Toolbar>
         </AppBar>
         <Drawer variant="permanent" open={open}>
@@ -114,7 +181,7 @@ const DashboardLayout = () => {
         >
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Outlet />
+            <Outlet user={user} />
             <Copyright sx={{ pt: 4 }} />
           </Container>
         </Box>

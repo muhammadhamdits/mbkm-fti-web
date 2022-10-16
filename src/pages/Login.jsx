@@ -11,18 +11,39 @@ import {
 } from '@mui/material'
 import { createTheme, ThemeProvider } from '@mui/material/styles'
 import Copyright from '../components/Copyright'
+import axios from 'axios'
+import secureLocalStorage from 'react-secure-storage'
+import { useNavigate } from 'react-router-dom'
 
 const theme = createTheme()
 
 const LoginPage = () => {
-  const handleSubmit = (event) => {
+  const baseUrl = process.env.REACT_APP_API_URL
+  const navigate = useNavigate()
+  const token = secureLocalStorage.getItem('token')
+  const [error, setError] = React.useState('')
+
+  const handleSubmit = async (event) => {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    console.log({
-      email: data.get('email'),
-      password: data.get('password'),
-    })
+
+    try {
+      const response = await axios.post(`${baseUrl}/login`, {
+        username: data.get('username'),
+        password: data.get('password')
+      })
+      secureLocalStorage.setItem('token', response.data.token)
+      navigate('/')
+    } catch (e) {
+      setError(true)
+    }
   }
+
+  React.useEffect(() => {
+    if (token) navigate('/')
+  })
+
+  if (token) return (<></>)
 
   return (
     <ThemeProvider theme={theme}>
@@ -63,6 +84,11 @@ const LoginPage = () => {
               id="password"
               autoComplete="current-password"
             />
+            {error &&
+              <Typography variant='body2' color='error' >
+                Username/Password is incorrect
+              </Typography>
+            }
             <Button
               type="submit"
               fullWidth
