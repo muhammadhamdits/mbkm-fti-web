@@ -141,7 +141,6 @@ const DashboardLayout = () => {
           <Toolbar
             sx={{
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'flex-start',
               px: [1],
             }}

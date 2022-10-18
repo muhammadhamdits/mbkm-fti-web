@@ -11,18 +11,6 @@ import { Link } from 'react-router-dom'
 const BasicCard = (props) => {
   const { program } = props
 
-  if (program === 'loading') {
-    return (
-      <Card sx={{ height: '100%' }}>
-        <CardContent>
-          <Typography gutterBottom variant="h5" component="h2">
-            Loading...
-          </Typography>
-        </CardContent>
-      </Card>
-    )
-  }
-
   return (
     <Card sx={{ bgcolor: '#eee', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ display: 'flex'}}>

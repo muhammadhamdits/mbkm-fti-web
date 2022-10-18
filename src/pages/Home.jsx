@@ -13,39 +13,45 @@ const Home = () => {
   const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const [programs, setPrograms] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
   const fetchPrograms = async () => {
-    setPrograms(['loading'])
+    setIsLoading(true)
     try {
       const response = await axios.get(`${baseUrl}/programs`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setPrograms(response.data.programs)
     } catch (e) {
-      setPrograms(['empty'])
       console.log(e)
     }
+    setIsLoading(false)
   }
-  
-  useEffect(() => { if (!programs.length) fetchPrograms() })
 
-  return (
-    <Paper
-      sx={{
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column'
-      }}
-    >
-      <Grid container spacing={2} alignItems="stretch">
-        { programs.map((program, index) => (
-          <Grid item xs={12} md={6} lg={4} key={index}>
-            <Card program={program} />
-          </Grid>
-        )) }
-      </Grid>
-    </Paper>
-  )
+  useEffect(() => {
+    if(!isLoading && !programs.length) fetchPrograms()
+  })
+
+  if(isLoading) return <div>Loading...</div>
+  else if(programs.length){
+    return (
+      <Paper
+        sx={{
+          p: 2,
+          display: 'flex',
+          flexDirection: 'column'
+        }}
+      >
+        <Grid container spacing={2} alignItems="stretch">
+          { programs.map((program, index) => (
+            <Grid item xs={12} md={6} lg={4} key={index}>
+              <Card program={program} />
+            </Grid>
+          )) }
+        </Grid>
+      </Paper>
+    )
+  } else return <></>
 }
 
 export default Home

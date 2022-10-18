@@ -101,10 +101,10 @@ const Program = () => {
                   </Button>
                   <Typography variant='body2' sx={{ marginTop: 2, alignSelf: 'center' }}>
                     { isLater(program.openAt) ?
-                      `Pendaftaran akan dibuka ${countDays(program.openAt)} lagi` :
+                      `Pendaftaran akan dibuka pada ${formatDate(program.openAt)}` :
                       isInRange(new Date(), program.openAt, program.closeAt) ?
-                        `Pendaftaran ditutup dalam ${countDays(program.openAt, program.closeAt)} lagi` :
-                      `Pendaftaran telah ditutup ${countDays(program.closeAt, program.openAt)} yang lalu`
+                        `Pendaftaran ditutup pada ${formatDate(program.closeAt)}` :
+                      `Pendaftaran telah ditutup pada ${formatDate(program.closeAt)}`
                     }
                   </Typography>
                 </Paper>
