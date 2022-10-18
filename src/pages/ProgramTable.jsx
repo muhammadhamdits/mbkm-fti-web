@@ -321,7 +321,6 @@ const ProgramTable = () => {
           open={open}
           setOpen={setChildOpen}
           title="Tambah data program"
-          buttonText="Simpan"
           children={<AddProgramForm />} />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar setOpen={setChildOpen} />
