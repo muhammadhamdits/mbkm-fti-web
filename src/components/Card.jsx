@@ -22,9 +22,6 @@ const BasicCard = (props) => {
         />
         <Box sx={{ display: 'flex', flexDirection: 'column' }}>
           <CardContent sx={{ flex: '1 0 auto' }}>
-            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
-              { program.programType.name }
-            </Typography>
             <Typography component="div" variant="h6">
               <Link 
                 to={`/programs/${program.id}`} 
@@ -33,8 +30,8 @@ const BasicCard = (props) => {
               { program.name }
               </Link>
             </Typography>
-            <Typography variant="subtitle2" color="text.secondary">
-              { program.agency.name }
+            <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>
+              { program.programType.name } - <b>{ program.agency.name }</b>
             </Typography>
           </CardContent>
         </Box>

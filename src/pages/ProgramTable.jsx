@@ -78,6 +78,7 @@ const EnhancedTableToolbar = (props) => {
 }
 
 const AddProgramForm = (props) => {
+  const handleSetPrograms = props.setPrograms
   const programTypes = props.programTypes
   const agencies = props.agencies
   const token = secureLocalStorage.getItem('token')
@@ -89,7 +90,6 @@ const AddProgramForm = (props) => {
   const [closeAt, setCloseAt] = React.useState(moment())
   const [startsAt, setStartsAt] = React.useState(moment())
   const [endsAt, setEndsAt] = React.useState(moment())
-  const [isLoading, setIsLoading] = React.useState(false)
 
   const handleProgramTypeChange = (event) => {
     setProgramType(event.target.value)
@@ -140,7 +140,7 @@ const AddProgramForm = (props) => {
       const response = await axios.post(`${baseURL}/programs`, params, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      console.log(response)
+      handleSetPrograms(response.data.program, 'create')
     } catch (error) {
       console.log(error)
     }
@@ -259,8 +259,8 @@ const AddProgramForm = (props) => {
 }
 
 const EditProgramForm = (props) => {
+  const handleSetPrograms = props.setPrograms
   const program = props.program
-  console.log(program.isCertified)
   const programTypes = props.programTypes
   const agencies = props.agencies
   const [programType, setProgramType] = React.useState(program.programTypeId)
@@ -323,7 +323,7 @@ const EditProgramForm = (props) => {
       const response = await axios.put(`${baseUrl}/programs/${program.id}`, params, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      console.log(response)
+      handleSetPrograms(response.data.program, 'update')
     } catch (error) {
       console.log(error)
     }
@@ -444,6 +444,7 @@ const EditProgramForm = (props) => {
 }
 
 const DeleteProgramForm = (props) => {
+  const handleSetPrograms = props.setPrograms
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const id = props.id
@@ -453,7 +454,7 @@ const DeleteProgramForm = (props) => {
       const response = await axios.delete(`${baseUrl}/programs/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
-      console.log(response)
+      handleSetPrograms(id, 'delete')
     } catch (error) {
       console.log(error)
     }
@@ -551,6 +552,26 @@ const ProgramTable = () => {
     setIsLoading(false)
   }
 
+  const handleSetPrograms = (program, state) => {
+    if (state === 'create') {
+      setPrograms([...programs, program])
+      setChildOpen()
+    } else if (state === 'update') {
+      const newPrograms = programs.map(item => {
+        if (item.id === program.id) {
+          return program
+        }
+        return item
+      })
+      setPrograms(newPrograms)
+      setEditModalOpen()
+    } else if (state === 'delete') {
+      const newPrograms = programs.filter(item => item.id !== program)
+      setPrograms(newPrograms)
+      setDeleteModalOpen()
+    }
+  }
+
   React.useEffect(() => {
     if(!isLoading && !programs.length) fetchData()
     if(!isLoading && !programTypes.length) fetchProgramTypes()
@@ -568,7 +589,8 @@ const ProgramTable = () => {
           children={
             <AddProgramForm
               agencies={agencies}
-              programTypes={programTypes} />
+              programTypes={programTypes}
+              setPrograms={handleSetPrograms} />
           } />
         <Modal
           open={editOpen}
@@ -578,13 +600,18 @@ const ProgramTable = () => {
             <EditProgramForm
               program={editProgram}
               agencies={agencies}
-              programTypes={programTypes} />
+              programTypes={programTypes}
+              setPrograms={handleSetPrograms} />
           } />
         <Modal
           open={deleteOpen}
           setOpen={setDeleteModalOpen}
           title="Hapus data program?"
-          children={<DeleteProgramForm id={deleteId} />} />
+          children={
+            <DeleteProgramForm
+              id={deleteId}
+              setPrograms={handleSetPrograms} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar setOpen={setChildOpen} />
           <TableContainer>
