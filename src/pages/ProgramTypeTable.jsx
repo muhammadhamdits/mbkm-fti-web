@@ -213,15 +213,15 @@ const ProgramTypeTable = () => {
     return (
       <Box sx={{ width: '100%' }}>
         <Modal
-            open={open}
-            setOpen={handleShowModal}
-            title={`${capitalize(action)} jenis program`}
-            children={
-              <ProgramTypeForm 
-                action={action} 
-                data={programType} 
-                callback={callback} />
-            } />
+          open={open}
+          setOpen={handleShowModal}
+          title={`${capitalize(action)} jenis program`}
+          children={
+            <ProgramTypeForm 
+              action={action} 
+              data={programType} 
+              callback={callback} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar setOpen={handleActionModal.bind(this, 'Tambah')} />
           <TableContainer>

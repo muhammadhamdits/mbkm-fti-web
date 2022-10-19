@@ -16,6 +16,7 @@ import Modal from '../components/Modal'
 import axios from 'axios'
 import secureLocalStorage from 'react-secure-storage'
 import { DialogActions, Grid, TextField, Button } from '@mui/material'
+import { capitalize } from '../assets/utils'
 
 const EnhancedTableHead = () => {
   return (
@@ -56,7 +57,7 @@ const EnhancedTableToolbar = (props) => {
       >
         Daftar Instansi
       </Typography>
-      <Tooltip title="Tampah Program">
+      <Tooltip title="Tampah Instansi">
         <IconButton color="primary" onClick={setOpen}>
           <Add />
           <Typography variant="button" sx={{ ml: 1 }}>
@@ -68,85 +69,98 @@ const EnhancedTableToolbar = (props) => {
   )
 }
 
-const AddAgencyForm = () => {
+const StdTextField = (props) => {
+  return (
+    <TextField
+      required
+      name={props.name}
+      label={props.label}
+      defaultValue={props.value}
+      fullWidth
+      variant="standard"
+      margin="normal" />
+  )
+}
+
+const AgencyForm = (props) => {
+  const { action, data, callback } = props
   const token = secureLocalStorage.getItem('token')
-  const baseURL = process.env.REACT_APP_API_URL
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    const params = {
-      name: e.target.name.value,
-      address: e.target.address.value,
-      description: e.target.description.value,
-      webUrl: e.target.webUrl.value,
-      field: e.target.field.value
+
+    let params = {}
+    let baseUrl = `${process.env.REACT_APP_API_URL}/agencies`
+    const headers = { headers: { Authorization: `Bearer ${token}` } }
+
+    if(action !== 'Tambah') baseUrl += `/${data.id}`
+    if(action !== 'Hapus') {
+      params = {
+        name: e.target.name.value,
+        address: e.target.address.value,
+        description: e.target.description.value,
+        webUrl: e.target.webUrl.value,
+        field: e.target.field.value
+      }
     }
 
     try {
-      const response = await axios.post(`${baseURL}/agencies`, params, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      console.log(response)
+      let response = null
+      if(action === 'Tambah') response = await axios.post(baseUrl, params, headers)
+      else if(action === 'Edit') response = await axios.put(baseUrl, params, headers)
+      else response = await axios.delete(baseUrl, headers)
+
+      callback(response.data.agency)
     } catch (error) {
       console.log(error)
     }
   }
 
-  return (
-    <form onSubmit={handleSubmit}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            required
-            name="name"
-            label="Nama Instansi"
-            fullWidth
-            variant="standard"
-            margin="normal" />
-          <TextField
-            required
-            name="address"
-            label="Alamat"
-            fullWidth
-            variant="standard"
-            margin="normal" />
-          <TextField
-            name="description"
-            label="Deskripsi"
-            fullWidth
-            multiline
-            maxRows={4}
-            variant="standard"
-            margin="normal" />
-          <TextField
-            required
-            name="webUrl"
-            label="Alamat Website"
-            fullWidth
-            variant="standard"
-            margin="normal" />
-          <TextField
-            name="field"
-            label="Bidang"
-            fullWidth
-            variant="standard"
-            margin="normal" />
+  if(action === 'Hapus') {
+    return (
+      <>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom>
+              Apakah anda yakin ingin menghapus instansi ini?
+            </Typography>
+          </Grid>
         </Grid>
-      </Grid>
-      <DialogActions>
-        <Button type="submit">
-          Simpan
-        </Button>
-      </DialogActions>
-    </form>
-  )
+        <DialogActions>
+          <Button onClick={callback}>Batal</Button>
+          <Button onClick={handleSubmit}>Hapus</Button>
+        </DialogActions>
+      </>
+    )
+  } else{
+    return (
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <StdTextField name="name" label="Nama Instansi" value={data.name || ''} />
+            <StdTextField name="description" label="Deskripsi" value={data.description || ''} />
+            <StdTextField name="address" label="Alamat" value={data.address || ''} />
+            <StdTextField name="webUrl" label="Website" value={data.webUrl || ''} />
+            <StdTextField name="field" label="Bidang" value={data.field || ''} />
+          </Grid>
+        </Grid>
+        <DialogActions>
+          <Button type="submit">
+            Simpan
+          </Button>
+        </DialogActions>
+      </form>
+    )
+  }
 }
 
-const ProgramTable = () => {
+const AgencyTable = () => {
   const [open, setOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isLoaded, setIsLoaded] = React.useState(false)
   const [agencies, setAgencies] = React.useState([])
+  const [action, setAction] = React.useState('')
+  const [agency, setAgency] = React.useState({})
   const token = secureLocalStorage.getItem('token')
   const baseURL = process.env.REACT_APP_API_URL
 
@@ -168,6 +182,30 @@ const ProgramTable = () => {
     setOpen(!open)
   }
 
+  const handleActionModal = (action, data = {}) => {
+    setAction(action)
+    setAgency(data)
+    handleShowModal()
+  }
+
+  const callback = (data) => {
+    if(data){
+      if(action === 'Tambah') setAgencies([...agencies, data])
+      else if(action === 'Edit') {
+        const newAgencies = agencies.map(a => {
+          if(a.id === data.id) return data
+          return a
+        })
+        setAgencies(newAgencies)
+      } else {
+        const newAgencies = agencies.filter(a => a.id !== agency.id)
+        setAgencies(newAgencies)
+      }
+    }
+
+    handleShowModal()
+  }
+
   React.useEffect(() => {
     if(!isLoaded && !isLoading) fetchAgencies()
   }, [isLoaded, isLoading])
@@ -179,10 +217,15 @@ const ProgramTable = () => {
         <Modal
           open={open}
           setOpen={handleShowModal}
-          title="Tambah instansi"
-          children={<AddAgencyForm />} />
+          title={`${capitalize(action)} instansi`}
+          children={
+            <AgencyForm
+              action={action}
+              data={agency}
+              callback={callback} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
-          <EnhancedTableToolbar setOpen={handleShowModal} />
+          <EnhancedTableToolbar setOpen={handleActionModal.bind(this, 'Tambah')} />
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
@@ -197,10 +240,14 @@ const ProgramTable = () => {
                     <TableCell>{agency.name}</TableCell>
                     <TableCell>{agency.address}</TableCell>
                     <TableCell sx={{ width: '120px' }}>
-                      <IconButton color='warning'>
+                      <IconButton
+                        color='warning'
+                        onClick={handleActionModal.bind(this, 'Edit', agency)} >
                         <Edit />
                       </IconButton>
-                      <IconButton color='error'>
+                      <IconButton
+                        color='error'
+                        onClick={handleActionModal.bind(this, 'Hapus', agency)}>
                         <Delete />
                       </IconButton>
                     </TableCell>
@@ -215,4 +262,4 @@ const ProgramTable = () => {
   } else return <div>Empty</div>
 }
 
-export default ProgramTable
+export default AgencyTable
