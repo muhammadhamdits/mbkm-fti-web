@@ -13,9 +13,9 @@ import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { Add, Delete, Edit } from '@mui/icons-material'
 import Modal from '../components/Modal'
-import secureLocalStorage from 'react-secure-storage'
 import axios from 'axios'
-import { Button, DialogActions, Grid, TextField } from '@mui/material'
+import secureLocalStorage from 'react-secure-storage'
+import { DialogActions, Grid, TextField, Button } from '@mui/material'
 import { capitalize } from '../assets/utils'
 
 const EnhancedTableHead = () => {
@@ -26,10 +26,10 @@ const EnhancedTableHead = () => {
           #
         </TableCell>
         <TableCell>
-          Jenis Program
+          Nama Instansi
         </TableCell>
         <TableCell >
-          Deskripsi
+          Alamat
         </TableCell>
         <TableCell >
           Action
@@ -41,6 +41,7 @@ const EnhancedTableHead = () => {
 
 const EnhancedTableToolbar = (props) => {
   const setOpen = props.setOpen
+
   return (
     <Toolbar
       sx={{
@@ -54,9 +55,9 @@ const EnhancedTableToolbar = (props) => {
         id="tableTitle"
         component="div"
       >
-        Daftar Jenis Program
+        Daftar Instansi
       </Typography>
-      <Tooltip title="Tampah Program">
+      <Tooltip title="Tampah Instansi">
         <IconButton color="primary" onClick={setOpen}>
           <Add />
           <Typography variant="button" sx={{ ml: 1 }}>
@@ -68,22 +69,38 @@ const EnhancedTableToolbar = (props) => {
   )
 }
 
-const ProgramTypeForm = (props) => {
+const StdTextField = (props) => {
+  return (
+    <TextField
+      required
+      name={props.name}
+      label={props.label}
+      defaultValue={props.value}
+      fullWidth
+      variant="standard"
+      margin="normal" />
+  )
+}
+
+const AgencyForm = (props) => {
   const { action, data, callback } = props
   const token = secureLocalStorage.getItem('token')
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault()
 
     let params = {}
-    let baseUrl = `${process.env.REACT_APP_API_URL}/program-types`
+    let baseUrl = `${process.env.REACT_APP_API_URL}/agencies`
     const headers = { headers: { Authorization: `Bearer ${token}` } }
 
     if(action !== 'Tambah') baseUrl += `/${data.id}`
     if(action !== 'Hapus') {
       params = {
         name: e.target.name.value,
-        description: e.target.description.value
+        address: e.target.address.value,
+        description: e.target.description.value,
+        webUrl: e.target.webUrl.value,
+        field: e.target.field.value
       }
     }
 
@@ -93,35 +110,38 @@ const ProgramTypeForm = (props) => {
       else if(action === 'Edit') response = await axios.put(baseUrl, params, headers)
       else response = await axios.delete(baseUrl, headers)
 
-      callback(response.data.programType)
+      callback(response.data.agency)
     } catch (error) {
       console.log(error)
     }
   }
 
-  if(action !== 'Hapus'){
+  if(action === 'Hapus') {
+    return (
+      <>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom>
+              Apakah anda yakin ingin menghapus instansi ini?
+            </Typography>
+          </Grid>
+        </Grid>
+        <DialogActions>
+          <Button onClick={callback}>Batal</Button>
+          <Button onClick={handleSubmit}>Hapus</Button>
+        </DialogActions>
+      </>
+    )
+  } else{
     return (
       <form onSubmit={handleSubmit}>
         <Grid container spacing={2}>
           <Grid item xs={12}>
-            <TextField
-              margin='normal'
-              required
-              name="name"
-              label="Nama"
-              fullWidth
-              defaultValue={data.name || ''}
-              variant="standard" />
-            <TextField
-              margin='normal'
-              required
-              name="description"
-              label="Deskripsi"
-              fullWidth
-              multiline
-              maxRows={4}
-              defaultValue={data.description || ''}
-              variant="standard" />
+            <StdTextField name="name" label="Nama Instansi" value={data.name || ''} />
+            <StdTextField name="description" label="Deskripsi" value={data.description || ''} />
+            <StdTextField name="address" label="Alamat" value={data.address || ''} />
+            <StdTextField name="webUrl" label="Website" value={data.webUrl || ''} />
+            <StdTextField name="field" label="Bidang" value={data.field || ''} />
           </Grid>
         </Grid>
         <DialogActions>
@@ -131,73 +151,55 @@ const ProgramTypeForm = (props) => {
         </DialogActions>
       </form>
     )
-  } else {
-    return (
-      <>
-        <Grid container spacing={2}>
-          <Grid item xs={12}>
-            <Typography variant="subtitle2" gutterBottom>
-              Apakah anda yakin ingin menghapus program ini?
-            </Typography>
-          </Grid>
-        </Grid>
-        <DialogActions>
-          <Button onClick={callback}>
-            Batal
-          </Button>
-          <Button onClick={handleSubmit}>
-            Hapus
-          </Button>
-        </DialogActions>
-      </>
-    )
   }
 }
 
-const ProgramTypeTable = () => {
-  const token = secureLocalStorage.getItem('token')
-  const baseURL = process.env.REACT_APP_API_URL
+const AgencyTable = () => {
   const [open, setOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
-  const [programTypes, setProgramTypes] = React.useState([])
-  const [programType, setProgramType] = React.useState({})
+  const [isLoaded, setIsLoaded] = React.useState(false)
+  const [agencies, setAgencies] = React.useState([])
   const [action, setAction] = React.useState('')
+  const [agency, setAgency] = React.useState({})
+  const token = secureLocalStorage.getItem('token')
+  const baseURL = process.env.REACT_APP_API_URL
+
+  const fetchAgencies = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`${baseURL}/agencies`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setAgencies(response.data.agencies)
+    } catch (error) {
+      console.log(error)
+    }
+    setIsLoading(false)
+    setIsLoaded(true)
+  }
 
   const handleShowModal = () => {
     setOpen(!open)
   }
 
-  const getProgramTypes = async () => {
-    setIsLoading(true)
-    try {
-      const response = await axios.get(`${baseURL}/program-types`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setProgramTypes(response.data.programTypes)
-    } catch (error) {
-      console.log(error)
-    }
-    setIsLoading(false)
-  }
-
   const handleActionModal = (action, data = {}) => {
     setAction(action)
-    setProgramType(data)
+    setAgency(data)
     handleShowModal()
   }
 
   const callback = (data) => {
     if(data){
-      if(action === 'Tambah') setProgramTypes([...programTypes, data])
+      if(action === 'Tambah') setAgencies([...agencies, data])
       else if(action === 'Edit') {
-        const newProgramTypes = programTypes.map(pt => {
-          if(pt.id === data.id) return data
-          return pt
+        const newAgencies = agencies.map(a => {
+          if(a.id === data.id) return data
+          return a
         })
-        setProgramTypes(newProgramTypes)
+        setAgencies(newAgencies)
       } else {
-        const newProgramTypes = programTypes.filter(pt => pt.id !== programType.id)
-        setProgramTypes(newProgramTypes)
+        const newAgencies = agencies.filter(a => a.id !== agency.id)
+        setAgencies(newAgencies)
       }
     }
 
@@ -205,21 +207,21 @@ const ProgramTypeTable = () => {
   }
 
   React.useEffect(() => {
-    if(!isLoading && programTypes.length === 0) getProgramTypes()
-  })
+    if(!isLoaded && !isLoading) fetchAgencies()
+  }, [isLoaded, isLoading])
 
   if(isLoading) return <div>Loading...</div>
-  else if(programTypes.length){
+  else if(isLoaded && agencies.length){
     return (
       <Box sx={{ width: '100%' }}>
         <Modal
           open={open}
           setOpen={handleShowModal}
-          title={`${capitalize(action)} jenis program`}
+          title={`${capitalize(action)} instansi`}
           children={
-            <ProgramTypeForm 
-              action={action} 
-              data={programType} 
+            <AgencyForm
+              action={action}
+              data={agency}
               callback={callback} />
           } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
@@ -232,20 +234,20 @@ const ProgramTypeTable = () => {
             >
               <EnhancedTableHead />
               <TableBody>
-                {programTypes.map((programType, index) => (
-                  <TableRow hover key={programType.id}>
+                {agencies.map((agency, index) => (
+                  <TableRow hover key={agency.id}>
                     <TableCell>{index + 1}</TableCell>
-                    <TableCell>{programType.name}</TableCell>
-                    <TableCell>{programType.description}</TableCell>
+                    <TableCell>{agency.name}</TableCell>
+                    <TableCell>{agency.address}</TableCell>
                     <TableCell sx={{ width: '120px' }}>
-                      <IconButton 
+                      <IconButton
                         color='warning'
-                        onClick={handleActionModal.bind(this, 'Edit', programType)} >
+                        onClick={handleActionModal.bind(this, 'Edit', agency)} >
                         <Edit />
                       </IconButton>
                       <IconButton
                         color='error'
-                        onClick={handleActionModal.bind(this, 'Hapus', programType)}>
+                        onClick={handleActionModal.bind(this, 'Hapus', agency)}>
                         <Delete />
                       </IconButton>
                     </TableCell>
@@ -260,4 +262,4 @@ const ProgramTypeTable = () => {
   } else return <div>Empty</div>
 }
 
-export default ProgramTypeTable
+export default AgencyTable

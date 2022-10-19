@@ -87,7 +87,7 @@ const DashboardLayout = () => {
       })
       setUser(response.data.user)
     } catch (e) {
-      setUser(null)
+      setUser('error')
       secureLocalStorage.removeItem('token')
       return (<></>)
     }
@@ -141,7 +141,6 @@ const DashboardLayout = () => {
           <Toolbar
             sx={{
               display: 'flex',
-              alignItems: 'center',
               justifyContent: 'flex-start',
               px: [1],
             }}
@@ -164,7 +163,7 @@ const DashboardLayout = () => {
           </Toolbar>
           <Divider />
           <List component="nav">
-            <ListItems />
+            <ListItems user={user} />
           </List>
         </Drawer>
         <Box
@@ -181,7 +180,7 @@ const DashboardLayout = () => {
         >
           <Toolbar />
           <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-            <Outlet user={user} />
+            <Outlet context={user} />
             <Copyright sx={{ pt: 4 }} />
           </Container>
         </Box>

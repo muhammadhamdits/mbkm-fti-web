@@ -9,24 +9,32 @@ import ProgramTable from './pages/ProgramTable'
 import CourseTable from './pages/CourseTable'
 import ProgramTypeTable from './pages/ProgramTypeTable'
 import StudentProgramTable from './pages/StudentProgramTable'
+import AgencyTable from './pages/AgencyTable'
+import UserTable from './pages/UserTable'
+import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 
 const App = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/" element={<DashboardLayout />}>
-          <Route index element={<Home />} />
-          <Route path="/programs/1" element={<Program />} />
-          <Route path="/my-programs/1" element={<MyProgram />} />
-          <Route path="/logbooks/1" element={<Logbook />} />
-          <Route path="/programs" element={<ProgramTable />} />
-          <Route path="/courses" element={<CourseTable />} />
-          <Route path="/program-types" element={<ProgramTypeTable />} />
-          <Route path="/student-programs" element={<StudentProgramTable />} />
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <LocalizationProvider dateAdapter={AdapterMoment}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<DashboardLayout />}>
+            <Route index element={<Home />} />
+            <Route path="/programs/:id" element={<Program />} />
+            <Route path="/my-programs/1" element={<MyProgram />} />
+            <Route path="/logbooks/1" element={<Logbook />} />
+            <Route path="/programs" element={<ProgramTable />} />
+            <Route path="/courses" element={<CourseTable />} />
+            <Route path="/program-types" element={<ProgramTypeTable />} />
+            <Route path="/student-programs" element={<StudentProgramTable />} />
+            <Route path="/agencies" element={<AgencyTable />} />
+            <Route path="/users" element={<UserTable />} />
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </LocalizationProvider>
   )
 }
 
