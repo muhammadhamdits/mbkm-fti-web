@@ -485,6 +485,7 @@ const DeleteProgramForm = (props) => {
 const ProgramTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoaded, setIsLoaded] = React.useState(false)
   const [programs, setPrograms] = React.useState([])
   const [open, setOpen] = React.useState(false)
   const [editOpen, setEditOpen] = React.useState(false)
@@ -573,13 +574,16 @@ const ProgramTable = () => {
   }
 
   React.useEffect(() => {
-    if(!isLoading && !programs.length) fetchData()
-    if(!isLoading && !programTypes.length) fetchProgramTypes()
-    if(!isLoading && !agencies.length) fetchAgencies()
-  }, [isLoading, programs, programTypes, agencies])
+    if(!isLoaded) {
+      fetchAgencies()
+      fetchProgramTypes()
+      fetchData()  
+      setIsLoaded(true)
+    }
+  }, [isLoaded])
 
-  if(isLoading) return <h1>Loading...</h1>
-  else if(programs.length) {
+  if(isLoading) return <>Loading</>
+  else if(isLoaded && !isLoading) {
     return (
       <Box sx={{ width: '100%' }}>
         <Modal
@@ -653,7 +657,7 @@ const ProgramTable = () => {
         </Paper>
       </Box>
     )
-  } else return <></>
+  }
 }
 
 export default ProgramTable

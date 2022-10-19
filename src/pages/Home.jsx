@@ -14,6 +14,7 @@ const Home = () => {
   const token = secureLocalStorage.getItem('token')
   const [programs, setPrograms] = useState([])
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
 
   const fetchPrograms = async () => {
     setIsLoading(true)
@@ -26,10 +27,11 @@ const Home = () => {
       console.log(e)
     }
     setIsLoading(false)
+    setIsLoaded(true)
   }
 
   useEffect(() => {
-    if(!isLoading && !programs.length) fetchPrograms()
+    if (!isLoaded) fetchPrograms()
   })
 
   if(isLoading) return <div>Loading...</div>
@@ -51,7 +53,7 @@ const Home = () => {
         </Grid>
       </Paper>
     )
-  } else return <></>
+  } else return <>Empty</>
 }
 
 export default Home

@@ -67,7 +67,7 @@ const Program = () => {
               Periode Kegiatan
             </Typography>
             <Typography variant='body2' sx={{ marginBottom: 2 }}>
-            {`
+              {`
                 ${formatDate(program.startsAt)} - 
                 ${formatDate(program.endsAt)} 
                 (${countMonthsDays(program.startsAt, program.endsAt)})
