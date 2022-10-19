@@ -16,6 +16,7 @@ import Modal from '../components/Modal'
 import secureLocalStorage from 'react-secure-storage'
 import axios from 'axios'
 import { Button, DialogActions, Grid, TextField } from '@mui/material'
+import { capitalize } from '../assets/utils'
 
 const EnhancedTableHead = () => {
   return (
@@ -67,64 +68,100 @@ const EnhancedTableToolbar = (props) => {
   )
 }
 
-const AddProgramTypeForm = () => {
+const ProgramTypeForm = (props) => {
+  const { action, data, callback } = props
   const token = secureLocalStorage.getItem('token')
-  const baseURL = process.env.REACT_APP_API_URL
-
-  const saveProgramType = async (e) => {
+  
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    const params = {
-      name: e.target.name.value,
-      description: e.target.description.value
+
+    let params = {}
+    let baseUrl = `${process.env.REACT_APP_API_URL}/program-types`
+    const headers = { headers: { Authorization: `Bearer ${token}` } }
+
+    if(action !== 'Tambah') baseUrl += `/${data.id}`
+    if(action !== 'Hapus') {
+      params = {
+        name: e.target.name.value,
+        description: e.target.description.value
+      }
     }
 
     try {
-      const res = await axios.post(`${baseURL}/program-types`, params, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      console.log(res)
+      let response = null
+      if(action === 'Tambah') response = await axios.post(baseUrl, params, headers)
+      else if(action === 'Edit') response = await axios.put(baseUrl, params, headers)
+      else response = await axios.delete(baseUrl, headers)
+
+      callback(response.data.programType)
     } catch (error) {
       console.log(error)
     }
   }
 
-  return (
-    <form onSubmit={saveProgramType}>
-      <Grid container spacing={2}>
-        <Grid item xs={12}>
-          <TextField
-            margin='normal'
-            required
-            name="name"
-            label="Nama"
-            fullWidth
-            variant="standard" />
-          <TextField
-            margin='normal'
-            required
-            name="description"
-            label="Deskripsi"
-            fullWidth
-            multiline
-            maxRows={4}
-            variant="standard" />
+  if(action !== 'Hapus'){
+    return (
+      <form onSubmit={handleSubmit}>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <TextField
+              margin='normal'
+              required
+              name="name"
+              label="Nama"
+              fullWidth
+              defaultValue={data.name || ''}
+              variant="standard" />
+            <TextField
+              margin='normal'
+              required
+              name="description"
+              label="Deskripsi"
+              fullWidth
+              multiline
+              maxRows={4}
+              defaultValue={data.description || ''}
+              variant="standard" />
+          </Grid>
         </Grid>
-      </Grid>
-      <DialogActions>
-        <Button type="submit">
-          Simpan
-        </Button>
-      </DialogActions>
-    </form>
-  )
+        <DialogActions>
+          <Button type="submit">
+            Simpan
+          </Button>
+        </DialogActions>
+      </form>
+    )
+  } else {
+    return (
+      <>
+        <Grid container spacing={2}>
+          <Grid item xs={12}>
+            <Typography variant="subtitle2" gutterBottom>
+              Apakah anda yakin ingin menghapus program ini?
+            </Typography>
+          </Grid>
+        </Grid>
+        <DialogActions>
+          <Button onClick={callback}>
+            Batal
+          </Button>
+          <Button onClick={handleSubmit}>
+            Hapus
+          </Button>
+        </DialogActions>
+      </>
+    )
+  }
 }
 
-const ProgramTable = () => {
+const ProgramTypeTable = () => {
   const token = secureLocalStorage.getItem('token')
   const baseURL = process.env.REACT_APP_API_URL
   const [open, setOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [programTypes, setProgramTypes] = React.useState([])
+  const [programType, setProgramType] = React.useState({})
+  const [action, setAction] = React.useState('')
 
   const handleShowModal = () => {
     setOpen(!open)
@@ -143,9 +180,33 @@ const ProgramTable = () => {
     setIsLoading(false)
   }
 
+  const handleActionModal = (action, data = {}) => {
+    setAction(action)
+    setProgramType(data)
+    handleShowModal()
+  }
+
+  const callback = (data) => {
+    if(data){
+      if(action === 'Tambah') setProgramTypes([...programTypes, data])
+      else if(action === 'Edit') {
+        const newProgramTypes = programTypes.map(pt => {
+          if(pt.id === data.id) return data
+          return pt
+        })
+        setProgramTypes(newProgramTypes)
+      } else {
+        const newProgramTypes = programTypes.filter(pt => pt.id !== programType.id)
+        setProgramTypes(newProgramTypes)
+      }
+    }
+
+    handleShowModal()
+  }
+
   React.useEffect(() => {
     if(!isLoading && programTypes.length === 0) getProgramTypes()
-  }, [isLoading, programTypes])
+  })
 
   if(isLoading) return <div>Loading...</div>
   else if(programTypes.length){
@@ -154,10 +215,15 @@ const ProgramTable = () => {
         <Modal
             open={open}
             setOpen={handleShowModal}
-            title="Tambah jenis program"
-            children={<AddProgramTypeForm />} />
+            title={`${capitalize(action)} jenis program`}
+            children={
+              <ProgramTypeForm 
+                action={action} 
+                data={programType} 
+                callback={callback} />
+            } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
-          <EnhancedTableToolbar setOpen={handleShowModal} />
+          <EnhancedTableToolbar setOpen={handleActionModal.bind(this, 'Tambah')} />
           <TableContainer>
             <Table
               sx={{ minWidth: 750 }}
@@ -172,10 +238,14 @@ const ProgramTable = () => {
                     <TableCell>{programType.name}</TableCell>
                     <TableCell>{programType.description}</TableCell>
                     <TableCell sx={{ width: '120px' }}>
-                      <IconButton color='warning'>
+                      <IconButton 
+                        color='warning'
+                        onClick={handleActionModal.bind(this, 'Edit', programType)} >
                         <Edit />
                       </IconButton>
-                      <IconButton color='error'>
+                      <IconButton
+                        color='error'
+                        onClick={handleActionModal.bind(this, 'Hapus', programType)}>
                         <Delete />
                       </IconButton>
                     </TableCell>
@@ -190,4 +260,4 @@ const ProgramTable = () => {
   } else return <div>Empty</div>
 }
 
-export default ProgramTable
+export default ProgramTypeTable
