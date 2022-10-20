@@ -11,11 +11,14 @@ import {
   FormControlLabel,
   Switch,
   DialogActions,
-  Button
+  Button,
+  Alert,
+  AlertTitle
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
 import Card from '../components/Card'
 import Modal from '../components/Modal'
+import { delay } from '../assets/utils'
 import { useNavigate, useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
@@ -81,6 +84,7 @@ const StdDatePick = (props) => {
 const AddProgramForm = (props) => {
   const programTypes = props.programTypes
   const agencies = props.agencies
+  const callback = props.callback
   const token = secureLocalStorage.getItem('token')
   const baseURL = process.env.REACT_APP_API_URL
   const placements = [
@@ -145,6 +149,7 @@ const AddProgramForm = (props) => {
       const response = await axios.post(`${baseURL}/programs`, params, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      callback()
     } catch (error) {
       console.log(error)
     }
@@ -221,6 +226,7 @@ const Home = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [open, setOpen] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
 
   const getAxios = async (endpoint) => {
     try {
@@ -253,6 +259,13 @@ const Home = () => {
     setOpen(!open)
   }
 
+  const callback = async () => {
+    setModalOpen()
+    setShowAlert(true)
+    await delay(24000)
+    setShowAlert(false)
+  }
+
   useEffect(() => {
     if (!isLoaded) fetchPrograms()
   })
@@ -261,6 +274,12 @@ const Home = () => {
   else if(programs.length){
     return (
       <>
+        {showAlert &&
+          <Alert severity="success">
+            <AlertTitle>Sukses</AlertTitle>
+            Kamu telah berhasil mengusulkan program! Kamu akan mendapatkan notifikasi jika program telah disetujui atau ditolak.
+          </Alert>
+        }
         <Modal
           open={open}
           setOpen={setModalOpen}
@@ -268,7 +287,8 @@ const Home = () => {
           children={
             <AddProgramForm
               agencies={agencies}
-              programTypes={programTypes} />
+              programTypes={programTypes}
+              callback={callback} />
           } />
         {user.role === 'student' && 
           <Fab

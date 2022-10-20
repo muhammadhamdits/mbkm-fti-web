@@ -42,4 +42,6 @@ const capitalize = (str) => {
   return str.charAt(0).toUpperCase() + str.slice(1)
 }
 
-export { formatDate, countMonthsDays, capitalize, countDays, isInRange, isLater }
+const delay = ms => new Promise(res => setTimeout(res, ms))
+
+export { formatDate, countMonthsDays, capitalize, countDays, isInRange, isLater, delay }
