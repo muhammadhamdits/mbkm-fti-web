@@ -19,7 +19,7 @@ import AddIcon from '@mui/icons-material/Add'
 import Card from '../components/Card'
 import Modal from '../components/Modal'
 import { delay } from '../assets/utils'
-import { useNavigate, useOutletContext } from 'react-router-dom'
+import { useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import axios from 'axios'
@@ -146,7 +146,7 @@ const AddProgramForm = (props) => {
     }
 
     try {
-      const response = await axios.post(`${baseURL}/programs`, params, {
+      await axios.post(`${baseURL}/programs`, params, {
         headers: { Authorization: `Bearer ${token}` }
       })
       callback()
@@ -218,7 +218,6 @@ const AddProgramForm = (props) => {
 const Home = () => {
   const user = useOutletContext()
   const baseUrl = process.env.REACT_APP_API_URL
-  const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const [programs, setPrograms] = useState([])
   const [programTypes, setProgramTypes] = useState([])
