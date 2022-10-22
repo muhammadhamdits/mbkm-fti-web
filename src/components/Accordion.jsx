@@ -21,7 +21,6 @@ const ControlledAccordions = () => {
           expandIcon={<ExpandMoreIcon />}
           aria-controls="panel1bh-content"
           id="panel1bh-header"
-          alignItems="center"
         >
           <Typography sx={{ width: '33%', flexShrink: 0 }}>
             Dasar-dasar Pemrograman
