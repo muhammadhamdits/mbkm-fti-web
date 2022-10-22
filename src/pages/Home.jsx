@@ -4,13 +4,11 @@ import {
   Grid
 } from '@mui/material'
 import Card from '../components/Card'
-import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import secureLocalStorage from 'react-secure-storage'
 
 const Home = () => {
   const baseUrl = process.env.REACT_APP_API_URL
-  const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const [programs, setPrograms] = useState([])
   const [isLoading, setIsLoading] = useState(false)
