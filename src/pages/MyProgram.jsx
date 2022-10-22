@@ -45,7 +45,7 @@ const MyProgram = () => {
           <Typography variant='subtitle2'>
             Konversi Mata Kuliah
           </Typography>
-          <Grid container spacing={2} alignItems="center" sx={{ marginBottom: 1 }}>
+          <Grid container spacing={2} sx={{ marginBottom: 1 }}>
             <Grid item xs={6}>
               <Typography variant='caption'>
                 Total SKS: 10 dari 20
