@@ -1,24 +1,39 @@
 import * as React from 'react'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TableRow from '@mui/material/TableRow'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
-import Paper from '@mui/material/Paper'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
-import { AddOutlined, ContentPasteSearchOutlined, DeleteOutline, EditOutlined, Label } from '@mui/icons-material'
-import { Button, TextField, FormControlLabel, Switch, Select, MenuItem, FormControl, InputLabel, Grid, DialogActions } from '@mui/material'
+import {
+  AddOutlined,
+  DeleteOutline,
+  EditOutlined
+} from '@mui/icons-material'
+import {
+  Button,
+  TextField,
+  FormControlLabel,
+  Switch,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Grid,
+  DialogActions,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Typography,
+  Paper,
+  IconButton,
+  Tooltip
+} from '@mui/material'
 import axios from 'axios'
-import secureLocalStorage from 'react-secure-storage'
-import Modal from '../components/Modal'
-import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import moment from 'moment'
-import { useOutletContext } from 'react-router-dom'
+import secureLocalStorage from 'react-secure-storage'
+import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
+import Modal from '../components/Modal'
+import { isInRange, isLater } from '../assets/utils'
 
 const EnhancedTableHead = () => {
   return (
@@ -481,6 +496,56 @@ const DeleteProgramForm = (props) => {
   )
 }
 
+const StatusProgramForm = (props) => {
+  const { program, callback } = props
+  const token = secureLocalStorage.getItem('token')
+  const baseUrl = process.env.REACT_APP_API_URL
+  const [statusProgram, setStatusProgram] = React.useState(program.status)
+
+  const handleSetStatusProgram = (e) => {
+    setStatusProgram(e.target.value)
+  }
+
+  const handleUpdateStatus = async () => {
+    try {
+      const response = await axios.put(`${baseUrl}/programs/${program.id}`,
+        { status: statusProgram },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback(response.data.program, 'status')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  return(
+    <>
+      <Typography variant="subtitle2" gutterBottom>
+        Konfirmasi status usulan program
+      </Typography>
+      <FormControl fullWidth margin="normal" variant="standard">
+        <InputLabel>Status Program</InputLabel>
+        <Select
+          required
+          fullWidth
+          value={statusProgram}
+          onChange={handleSetStatusProgram} >
+          <MenuItem key='proposed' value='proposed' disabled>Diajukan</MenuItem>
+          <MenuItem key='approved' value='approved'>Disetujui</MenuItem>
+          <MenuItem key='rejected' value='rejected'>Ditolak</MenuItem>
+        </Select>
+      </FormControl>
+      <DialogActions>
+        <Button
+          disabled={statusProgram === 'proposed'}
+          onClick={handleUpdateStatus}>
+          Simpan
+        </Button>
+      </DialogActions>
+    </>
+  )
+}
+
 
 const ProgramTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
@@ -490,6 +555,7 @@ const ProgramTable = () => {
   const [open, setOpen] = React.useState(false)
   const [editOpen, setEditOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
+  const [statusOpen, setStatusOpen] = React.useState(false)
   const [editProgram, setEditProgram] = React.useState(null)
   const [deleteId, setDeleteId] = React.useState(null)
   const [agencies, setAgencies] = React.useState([])
@@ -557,7 +623,7 @@ const ProgramTable = () => {
     if (state === 'create') {
       setPrograms([...programs, program])
       setChildOpen()
-    } else if (state === 'update') {
+    } else if (state === 'update' || state === 'status') {
       const newPrograms = programs.map(item => {
         if (item.id === program.id) {
           return program
@@ -565,12 +631,24 @@ const ProgramTable = () => {
         return item
       })
       setPrograms(newPrograms)
-      setEditModalOpen()
+      if(state === 'update') setEditModalOpen()
+      else setStatusOpen()
     } else if (state === 'delete') {
       const newPrograms = programs.filter(item => item.id !== program)
       setPrograms(newPrograms)
       setDeleteModalOpen()
     }
+  }
+
+  const handleStatusChange = async (program) => {
+    if(program.status === 'proposed'){
+      setEditProgram(program)
+      setStatusModalOpen()
+    }
+  }
+
+  const setStatusModalOpen = () => {
+    setStatusOpen(!statusOpen)
   }
 
   React.useEffect(() => {
@@ -616,6 +694,15 @@ const ProgramTable = () => {
               id={deleteId}
               setPrograms={handleSetPrograms} />
           } />
+        <Modal
+          open={statusOpen}
+          setOpen={setStatusModalOpen}
+          title="Ubah status program"
+          children={
+            <StatusProgramForm
+              program={editProgram}
+              callback={handleSetPrograms} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar setOpen={setChildOpen} />
           <TableContainer>
@@ -633,8 +720,24 @@ const ProgramTable = () => {
                     <TableCell>{ program.programType.name }</TableCell>
                     <TableCell>{ program.agency.name }</TableCell>
                     <TableCell>
-                      <Button variant='contained' color='success' size='small'>
-                        Aktif
+                      <Button
+                        variant='contained'
+                        onClick={handleStatusChange.bind(this, program)}
+                        color={
+                          program.status === 'proposed' ? 'secondary' :
+                          program.status === 'rejected' ? 'error' :
+                          isInRange(new Date(), program.startsAt, program.endsAt) ||
+                          !isLater(program.endsAt) ? 'primary' :
+                          'success'
+                        }
+                        size='small'>
+                        {
+                          program.status === 'proposed' ? 'Diajukan' :
+                          program.status === 'rejected' ? 'Ditolak' :
+                          isInRange(new Date(), program.startsAt, program.endsAt) ? 'Sedang berlangsung' :
+                          !isLater(program.endsAt) ? 'Selesai' :
+                          'Aktif'
+                        }
                       </Button>
                     </TableCell>
                     <TableCell>

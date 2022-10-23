@@ -72,7 +72,7 @@ const StdSelect = (props) => {
 const StdDatePick = (props) => {
   return (
     <MobileDatePicker
-      label="Registration Open Date"
+      label={props.label}
       inputFormat="DD MMMM YYYY"
       value={props.value}
       onChange={props.onChange}
@@ -319,6 +319,7 @@ const Home = () => {
         >
           <Grid container spacing={2} alignItems="stretch">
             { programs.map((program, index) => (
+              program.status === 'approved' &&
               <Grid item xs={12} md={6} lg={4} key={index}>
                 <Card program={program} />
               </Grid>
