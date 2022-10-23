@@ -25,6 +25,7 @@ import { AddOutlined, Delete, DeleteOutline, Edit, EditOutlined, RemoveRedEye, S
 import { Button, Chip } from '@mui/material'
 import axios from 'axios'
 import secureLocalStorage from 'react-secure-storage'
+import Modal from '../components/Modal'
 
 const EnhancedTableHead = () => {
   return (
@@ -75,12 +76,20 @@ const EnhancedTableToolbar = () => {
   )
 }
 
+const CPMKList = (props) => {
+  return (
+    <>Test</>
+  )
+}
+
 const CourseTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
   const [courses, setCourses] = React.useState([])
+  const [course, setCourse] = React.useState({})
   const [isLoading, setIsLoading] = React.useState(false)
   const [isLoaded, setIsLoaded] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
 
   const fetchCourses = async () => {
     setIsLoading(true)
@@ -96,6 +105,18 @@ const CourseTable = () => {
     setIsLoaded(true)
   }
 
+  const setModalOpen = () => {
+    setOpen(!open)
+  }
+
+  const handleCPMKClick = (course) => {
+    setCourse(course)
+    setModalOpen()
+  }
+
+  const callback = () => {
+  }
+
   React.useEffect(() => {
     if(!isLoaded && !isLoading) fetchCourses()
   }, [isLoaded, isLoading])
@@ -104,6 +125,17 @@ const CourseTable = () => {
   else if(isLoaded && courses) {
     return (
       <Box sx={{ width: '100%' }}>
+        <Modal
+          open={open}
+          setOpen={setModalOpen}
+          title="Daftar CPMK"
+          children={
+            <CPMKList
+              data={course}
+              baseUrl={baseUrl}
+              token={token}
+              callback={callback} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar />
           <TableContainer>
@@ -120,14 +152,13 @@ const CourseTable = () => {
                     <TableCell>{course.name}</TableCell>
                     <TableCell>{course.sks} SKS</TableCell>
                     <TableCell>
-                      <Button variant="outlined" color="primary" size="small" startIcon={<RemoveRedEye />}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={handleCPMKClick.bind(this, course)}
+                        startIcon={<Edit />}>
                         CPMK
-                      </Button>
-                      <Button variant="outlined" color="warning" size="small" startIcon={<Edit />} sx={{ marginLeft: 1 }}>
-                        Edit
-                      </Button>
-                      <Button variant="outlined" color="error" size="small" startIcon={<Delete />} sx={{ marginLeft: 1 }}>
-                        Delete
                       </Button>
                     </TableCell>
                   </TableRow>
