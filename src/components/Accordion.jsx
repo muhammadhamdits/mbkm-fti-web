@@ -5,7 +5,7 @@ import AccordionSummary from '@mui/material/AccordionSummary'
 import Typography from '@mui/material/Typography'
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'
 import { Box, Chip, LinearProgress, List, ListItem, ListItemIcon, ListItemText } from '@mui/material'
-import { AccountTree, ArrowRight } from '@mui/icons-material'
+import { ArrowRight } from '@mui/icons-material'
 
 const ControlledAccordions = () => {
   const [expanded, setExpanded] = React.useState(false)

@@ -23,7 +23,7 @@ const App = () => {
           <Route path="/" element={<DashboardLayout />}>
             <Route index element={<Home />} />
             <Route path="/programs/:id" element={<Program />} />
-            <Route path="/my-programs/1" element={<MyProgram />} />
+            <Route path="/my-programs/:id" element={<MyProgram />} />
             <Route path="/logbooks/1" element={<Logbook />} />
             <Route path="/programs" element={<ProgramTable />} />
             <Route path="/courses" element={<CourseTable />} />
