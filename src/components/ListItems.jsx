@@ -27,7 +27,7 @@ const ListItems = (props) => {
   }
 
   React.useEffect(() => {
-    if (!isLoaded && !isLoading) fetchStudentPrograms()
+    if (!isLoaded && !isLoading && props.user.role === 'student') fetchStudentPrograms()
   })
   
   if (isLoading) {
