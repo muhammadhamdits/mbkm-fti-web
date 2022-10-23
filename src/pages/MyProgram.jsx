@@ -21,7 +21,6 @@ import axios from 'axios'
 
 const MyProgram = () => {  
   const { id } = useParams()
-  const user = useOutletContext()
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
   const [isLoading, setIsLoading] = useState(false)
