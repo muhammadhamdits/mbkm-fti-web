@@ -2,7 +2,8 @@ import * as React from 'react'
 import {
   AddOutlined,
   DeleteOutline,
-  EditOutlined
+  EditOutlined,
+  Settings
 } from '@mui/icons-material'
 import {
   Button,
@@ -51,10 +52,13 @@ const EnhancedTableHead = () => {
         <TableCell >
           Nama Instansi
         </TableCell>
-        <TableCell >
+        <TableCell align='center'>
+          Mata Kuliah
+        </TableCell>
+        <TableCell align='center'>
           Status
         </TableCell>
-        <TableCell >
+        <TableCell align='center'>
           Action
         </TableCell>
       </TableRow>
@@ -546,7 +550,6 @@ const StatusProgramForm = (props) => {
   )
 }
 
-
 const ProgramTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const [isLoading, setIsLoading] = React.useState(false)
@@ -719,6 +722,13 @@ const ProgramTable = () => {
                     <TableCell>{ program.name }</TableCell>
                     <TableCell>{ program.programType.name }</TableCell>
                     <TableCell>{ program.agency.name }</TableCell>
+                    <TableCell align='center'>
+                      <IconButton
+                        color='secondary'
+                        onClick={() => {}} >
+                        <Settings />
+                      </IconButton>
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant='contained'
@@ -740,7 +750,7 @@ const ProgramTable = () => {
                         }
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align='center'>
                       <IconButton
                         color='warning'
                         onClick={setSelectedEditProgram.bind(this, program)}>
