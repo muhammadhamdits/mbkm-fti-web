@@ -2,7 +2,8 @@ import * as React from 'react'
 import {
   AddOutlined,
   DeleteOutline,
-  EditOutlined
+  EditOutlined,
+  Settings
 } from '@mui/icons-material'
 import {
   Button,
@@ -26,7 +27,14 @@ import {
   Typography,
   Paper,
   IconButton,
-  Tooltip
+  Tooltip,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Checkbox,
+  Chip
 } from '@mui/material'
 import axios from 'axios'
 import moment from 'moment'
@@ -51,10 +59,13 @@ const EnhancedTableHead = () => {
         <TableCell >
           Nama Instansi
         </TableCell>
-        <TableCell >
+        <TableCell align='center'>
+          Mata Kuliah
+        </TableCell>
+        <TableCell align='center'>
           Status
         </TableCell>
-        <TableCell >
+        <TableCell align='center'>
           Action
         </TableCell>
       </TableRow>
@@ -546,6 +557,76 @@ const StatusProgramForm = (props) => {
   )
 }
 
+const SetCoursesForm = (props) => {
+  const { courses, program, callback } = props
+  const token = secureLocalStorage.getItem('token')
+  const baseUrl = process.env.REACT_APP_API_URL
+  const programCourseIds = program.courses.map(course => course.id)
+  const [checked, setChecked] = React.useState(programCourseIds)
+
+  const handleCheckCourse = (value) => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked)
+  }
+
+  const handleSave = async () => {
+    try{
+      await axios.put(`${baseUrl}/programs/${program.id}/courses`,
+        { courseIds: checked },
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback(checked, 'setCourses')
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  return(
+    <>
+      <List sx={{ width: '100%' }}>
+        {courses.map((course) => (
+          <ListItem
+            disablePadding
+            secondaryAction={
+              <Chip
+                color="primary"
+                size="small"
+                label={`${course.sks} SKS`} />
+            }
+            key={course.id}>
+            <ListItemButton
+              onClick={handleCheckCourse.bind(this, course.id)}
+              sx={{ mr: 8 }}
+              dense>
+              <ListItemIcon>
+                <Checkbox
+                  edge="start"
+                  checked={checked.includes(course.id)}
+                  tabIndex={-1}
+                  disableRipple
+                />
+              </ListItemIcon>
+              <ListItemText primary={course.name} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <DialogActions>
+        <Button onClick={handleSave}>
+          Simpan
+        </Button>
+      </DialogActions>
+    </>
+  )
+}
 
 const ProgramTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
@@ -556,10 +637,12 @@ const ProgramTable = () => {
   const [editOpen, setEditOpen] = React.useState(false)
   const [deleteOpen, setDeleteOpen] = React.useState(false)
   const [statusOpen, setStatusOpen] = React.useState(false)
+  const [coursesOpen, setCoursesOpen] = React.useState(false)
   const [editProgram, setEditProgram] = React.useState(null)
   const [deleteId, setDeleteId] = React.useState(null)
   const [agencies, setAgencies] = React.useState([])
   const [programTypes, setProgramTypes] = React.useState([])
+  const [courses, setCourses] = React.useState([])
   const token = secureLocalStorage.getItem('token')
 
   const fetchProgramTypes = async () => {
@@ -582,6 +665,19 @@ const ProgramTable = () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       setAgencies(response.data.agencies)
+    } catch (error) {
+      console.log(error)
+    }
+    setIsLoading(false)
+  }
+
+  const fetchCourses = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`${baseUrl}/courses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCourses(response.data.courses)
     } catch (error) {
       console.log(error)
     }
@@ -637,6 +733,19 @@ const ProgramTable = () => {
       const newPrograms = programs.filter(item => item.id !== program)
       setPrograms(newPrograms)
       setDeleteModalOpen()
+    } else if (state === 'setCourses') {
+      const newCourseIds = program
+      const newCourses = courses.filter(course => {
+        if (newCourseIds.includes(course.id)) return course
+      })
+      const newPrograms = programs.map(item => {
+        if (item.id === editProgram.id) {
+          return { ...item, courses: newCourses }
+        }
+        return item
+      })
+      setPrograms(newPrograms)
+      setCoursesModalOpen()
     }
   }
 
@@ -651,10 +760,20 @@ const ProgramTable = () => {
     setStatusOpen(!statusOpen)
   }
 
+  const setCoursesModalOpen = () => {
+    setCoursesOpen(!coursesOpen)
+  }
+
+  const handleSetCourses = (program) => {
+    setEditProgram(program)
+    setCoursesModalOpen()
+  }
+
   React.useEffect(() => {
     if(!isLoaded) {
       fetchAgencies()
       fetchProgramTypes()
+      fetchCourses()
       fetchData()  
       setIsLoaded(true)
     }
@@ -703,6 +822,16 @@ const ProgramTable = () => {
               program={editProgram}
               callback={handleSetPrograms} />
           } />
+        <Modal
+          open={coursesOpen}
+          setOpen={setCoursesModalOpen}
+          title="Daftar Mata Kuliah"
+          children={
+            <SetCoursesForm
+              program={editProgram}
+              callback={handleSetPrograms}
+              courses={courses} />
+          } />
         <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
           <EnhancedTableToolbar setOpen={setChildOpen} />
           <TableContainer>
@@ -719,6 +848,13 @@ const ProgramTable = () => {
                     <TableCell>{ program.name }</TableCell>
                     <TableCell>{ program.programType.name }</TableCell>
                     <TableCell>{ program.agency.name }</TableCell>
+                    <TableCell align='center'>
+                      <IconButton
+                        color='secondary'
+                        onClick={handleSetCourses.bind(this, program)} >
+                        <Settings />
+                      </IconButton>
+                    </TableCell>
                     <TableCell>
                       <Button
                         variant='contained'
@@ -740,7 +876,7 @@ const ProgramTable = () => {
                         }
                       </Button>
                     </TableCell>
-                    <TableCell>
+                    <TableCell align='center'>
                       <IconButton
                         color='warning'
                         onClick={setSelectedEditProgram.bind(this, program)}>
