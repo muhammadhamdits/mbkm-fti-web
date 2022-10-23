@@ -9,15 +9,116 @@ import {
   List,
   Avatar,
   Box,
-  Chip
+  Chip,
+  CircularProgress,
+  Divider,
+  Alert,
+  AlertTitle
 } from '@mui/material'
-import { Download, Lock, Upload, WorkspacePremium } from '@mui/icons-material'
+import {
+  Download,
+  Lock,
+  Upload,
+  WorkspacePremium
+} from '@mui/icons-material'
+import axios from 'axios'
+import { useState, useEffect, useRef } from 'react'
+import secureLocalStorage from 'react-secure-storage'
+import { useParams } from 'react-router-dom'
+import Modal from '../components/Modal'
 import Accordion from '../components/Accordion'
 import { formatDate, isLater, isInRange } from '../assets/utils'
-import { useParams, useOutletContext } from 'react-router-dom'
-import { useState, useEffect } from 'react'
-import secureLocalStorage from 'react-secure-storage'
-import axios from 'axios'
+
+const UploadFileDetail = (props) => {
+  const { data, baseUrl, token, callback, field } = props
+  const [isLoading, setIsLoading] = useState(false)
+  const inputFileRef = useRef(null)
+  const [file, setFile] = useState(null)
+  const [fileName, setFileName] = useState('')
+  const handleUploadButton = () => {
+    inputFileRef.current.click()
+  }
+
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0])
+    setFileName(e.target.files[0].name)
+  }
+
+  const handleSubmit = async () => {
+    setIsLoading(true)
+    const formData = new FormData()
+
+    formData.append('file', file)
+    const objectName = 'StudentProgram'
+    const objectField = field
+    const objectIdString = JSON.stringify({
+      studentId: data.studentId,
+      programId: data.programId
+    })
+    const query = `objectName=${objectName}&objectId=${objectIdString}&objectField=${objectField}`
+
+    await axios.post(`${baseUrl}/upload?${query}`,
+      formData,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setIsLoading(false)
+    callback()
+  }
+
+  if (isLoading) {
+    return (
+      <Box sx={{ display: 'flex' }}>
+        <CircularProgress />
+      </Box>
+    )
+  }else{
+    return (
+      <Grid container spacing={2}>
+        <Grid item xs={12}>
+          <Typography variant="subtitle1" sx={{ fontWeight: 400 }}>
+            Unggah dokumen bukti bahwa kamu telah diterima dalam program ini
+          </Typography>
+          <Typography variant="caption" sx={{ mt: 1 }}>
+            Pastikan dokumen dalam format PDF.
+          </Typography>
+          <input
+            type="file"
+            accept="application/pdf"
+            ref={inputFileRef}
+            onChangeCapture={ handleFileChange }
+            style={{ display: 'none' }} />
+          <Typography
+            variant="subtitle2"
+            visibility={ fileName ? 'visible' : 'hidden' }
+            sx={{ mt: 2 }}>
+            {fileName}
+          </Typography>
+          <Button
+            variant='outlined'
+            color='primary'
+            size="small"
+            fullWidth
+            onClick={ handleUploadButton }
+            startIcon={<Upload />}>
+            Unggah
+          </Button>
+        </Grid>
+        <Grid item xs={12}>
+          <Divider sx={{ mt: 1, mb: 3 }} />
+          <Button
+            size="large"
+            disabled={!fileName}
+            variant='contained'
+            color='primary'
+            fullWidth
+            onClick={handleSubmit}>
+            Simpan
+          </Button>
+        </Grid>
+      </Grid>
+    )
+  }
+}
 
 const MyProgram = () => {  
   const { id } = useParams()
@@ -26,16 +127,22 @@ const MyProgram = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [studentProgram, setStudentProgram] = useState(null)
+  const [open, setOpen] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
+  const [field, setField] = useState(null)
+
+  const handleFetchData = async () => {
+    const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setStudentProgram(response.data.studentProgram)
+  }
 
   const fetchStudentProgram = async () => {
     setIsLoading(true)
     setIsLoaded(false)
     try {
-      const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      })
-      setStudentProgram(response.data.studentProgram)
-      console.log(response.data.studentProgram)
+      await handleFetchData()
     } catch (e) {
       console.log(e)
     }
@@ -46,6 +153,21 @@ const MyProgram = () => {
   const handleFileDownload = async (url) => {
     const newUrl = url + `?token=${token}`
     window.open(newUrl, '_blank')
+  }
+
+  const handleUploadFile = async (fieldName) => {
+    setField(fieldName)
+    setModalOpen()
+  }
+
+  const setModalOpen = () => {
+    setOpen(!open)
+  }
+
+  const callback = () => {
+    handleFetchData()
+    setShowAlert(true)
+    setModalOpen()
   }
 
   useEffect(() => {
@@ -60,6 +182,26 @@ const MyProgram = () => {
   } else if(isLoaded && studentProgram.programId == id) {
     return (
       <Grid container spacing={2}>
+        {showAlert &&
+          <Grid item xs={12}>
+            <Alert severity="success">
+              <AlertTitle>Sukses</AlertTitle>
+              Kamu telah berhasil mengupload file.
+            </Alert>
+          </Grid>
+        }
+        <Modal
+          open={open}
+          setOpen={setModalOpen}
+          title="Upload file"
+          children={
+            <UploadFileDetail
+              data={studentProgram}
+              baseUrl={baseUrl}
+              token={token}
+              field={field}
+              callback={callback} />
+          } />
         <Grid item xs={12} md={7} lg={8}>
           <Paper
             sx={{
@@ -143,7 +285,7 @@ const MyProgram = () => {
                   <>
                     <Chip label="Diterima" color="success" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
-                      Selamat anda diterima di program ini. program ini akan dimulai pada tanggal `${formatDate(studentProgram.program.startsAt)}`
+                      Selamat anda diterima di program ini. program ini akan dimulai pada tanggal {formatDate(studentProgram.program.startsAt)}
                     </Typography>
                   </>
                 } { studentProgram.status == 'accepted' && isInRange(new Date(), studentProgram.program.openAt, studentProgram.program.closeAt) &&
@@ -153,7 +295,8 @@ const MyProgram = () => {
                       Program sedang berlangsung.
                     </Typography>
                   </>
-                } { studentProgram.status == 'accepted' && !isLater(studentProgram.program.closeAt) &&
+                } { studentProgram.status == 'accepted' &&
+                  !isLater(new Date(studentProgram.program.closeAt).setDate(new Date(studentProgram.program.closeAt).getDate() + 1)) &&
                   <>
                     <Chip label="Selesai" color="primary" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
@@ -178,6 +321,11 @@ const MyProgram = () => {
                   Dokumen Penerimaan Instansi
                 </Typography>
                 <Button
+                  onClick={
+                    ['accepted'].includes(studentProgram.status) ?
+                    handleFileDownload.bind(this, studentProgram.acceptanceFile) :
+                    handleUploadFile.bind(this, 'acceptanceFile')
+                  }
                   disabled={
                     ['applied', 'rejected'].includes(studentProgram.status)
                   }
