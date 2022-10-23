@@ -178,8 +178,23 @@ const MyProgram = () => {
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Penerimaan Instansi
                 </Typography>
-                <Button variant='outlined' color='primary' size="small" startIcon={<Upload />}>
-                  Unggah
+                <Button
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status)
+                  }
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ? <Lock /> : 
+                    ['approved'].includes(studentProgram.status) ? <Upload /> :
+                    <Download />
+                  }>
+                  {
+                    ['applied', 'rejected'].includes(studentProgram.status) ? 'Terkunci' :
+                    ['approved'].includes(studentProgram.status) ? 'Unggah' :
+                    'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
