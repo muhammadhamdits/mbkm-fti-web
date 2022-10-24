@@ -1,6 +1,7 @@
 import * as React from 'react'
 import {
   AddOutlined,
+  Delete,
   Edit,
   Sync
 } from '@mui/icons-material'
@@ -99,18 +100,19 @@ const CPMKList = (props) => {
     setCpmks([...cpmks, { achievementCode: '', title: '' }])
   }
 
-  const handleSaveCPMKs = async (e) => {
-    e.preventDefault()
-    const inputs = document.querySelectorAll('input')
-    const achievementCodes = Array.from(inputs).filter((input) => {
-      if(input.name.includes('achievementCode')) return input.value
-    }).map((input) => input.value)
-    const titles = Array.from(inputs).filter((input) => {
-      if(input.name.includes('title')) return input.value
-    }).map((input) => input.value)
+  const handleSaveCPMKs = async () => {
+    const achievementCodes = cpmks.map(cpmk => cpmk.achievementCode)
+    const titles = cpmks.map(cpmk => cpmk.title)
+    // const inputs = document.querySelectorAll('input')
+    // const achievementCodes = Array.from(inputs).filter((input) => {
+    //   if(input.name.includes('achievementCode')) return input.value
+    // }).map((input) => input.value)
+    // const titles = Array.from(inputs).filter((input) => {
+    //   if(input.name.includes('title')) return input.value
+    // }).map((input) => input.value)
     try {
       const payload = {achievementCodes, titles}
-      const response = await axios.put(`${baseUrl}/courses/${data.id}/achievements`,
+      await axios.put(`${baseUrl}/courses/${data.id}/achievements`,
         payload,
         { headers: { Authorization: `Bearer ${token}` } }
       )
@@ -120,14 +122,31 @@ const CPMKList = (props) => {
     }
   }
 
+  const removeCPMK = (index) => {
+    const newCPMKs = cpmks.filter((cpmk, i) => i !== index)
+    setCpmks(newCPMKs)
+  }
+
+  const handleCodeChange = (index, e) => {
+    const newCPMKs = [...cpmks]
+    newCPMKs[index].achievementCode = e.target.value
+    setCpmks(newCPMKs)
+  }
+
+  const handleTitleChange = (index, e) => {
+    const newCPMKs = [...cpmks]
+    newCPMKs[index].title = e.target.value
+    setCpmks(newCPMKs)
+  }
+
   React.useEffect(() => {
     if(!isLoaded && !isLoading) fetchCPMKs()
   }, [isLoaded, isLoading])
 
   if(isLoading) return <div>Loading...</div>
-  else if(isLoaded){
+  else{
     return (
-      <form onSubmit={handleSaveCPMKs}>
+      <>
         <Button
           onClick={handleAddInput}
           size="small"
@@ -145,29 +164,38 @@ const CPMKList = (props) => {
                 fullWidth
                 label="Kode CPMK"
                 variant="standard"
-                name="achievementCodes[]"
-                defaultValue={cpmk.achievementCode}
+                value={cpmk.achievementCode}
+                onChange={handleCodeChange.bind(this, index)}
                 key={`${index}-kc`} />
             </Grid>
-            <Grid item xs={9} key={`${index}-gr`}>
+            <Grid item xs={8} key={`${index}-gm`}>
               <TextField
                 required
                 fullWidth
                 label="Nama CPMK"
                 variant="standard"
-                name="titles[]"
-                defaultValue={cpmk.title}
+                value={cpmk.title}
+                onChange={handleTitleChange.bind(this, index)}
                 key={`${index}-nc`} />
+            </Grid>
+            <Grid item xs={1} key={`${index}-gr`} >
+              <IconButton
+                sx={{ paddingTop: 2, paddingLeft: 0 }}
+                color="error"
+                key={`${index}-ic`}
+                onClick={removeCPMK.bind(this, index)} >
+                  <Delete />
+              </IconButton>
             </Grid>
           </Grid>
         ))}
         <DialogActions>
           <Button
-            type="submit">
+            onClick={handleSaveCPMKs} >
             Simpan
           </Button>
         </DialogActions>
-      </form>
+      </>
     )
   }
 }
