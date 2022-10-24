@@ -13,20 +13,29 @@ import {
   CircularProgress,
   Divider,
   Alert,
-  AlertTitle
+  AlertTitle,
+  ListItemButton,
+  ListItemIcon,
+  Checkbox,
+  DialogActions,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  LinearProgress
 } from '@mui/material'
 import {
   Download,
   Lock,
   Upload,
-  WorkspacePremium
+  WorkspacePremium,
+  ExpandMore,
+  ArrowRight
 } from '@mui/icons-material'
-import axios from 'axios'
 import { useState, useEffect, useRef } from 'react'
-import secureLocalStorage from 'react-secure-storage'
+import axios from 'axios'
 import { useParams } from 'react-router-dom'
+import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
-import Accordion from '../components/Accordion'
 import { formatDate, isLater, isInRange } from '../assets/utils'
 
 const UploadFileDetail = (props) => {
@@ -62,7 +71,7 @@ const UploadFileDetail = (props) => {
       { headers: { Authorization: `Bearer ${token}` } }
     )
     setIsLoading(false)
-    callback()
+    callback('Berhasil mengunggah dokumen')
   }
 
   if (isLoading) {
@@ -120,6 +129,75 @@ const UploadFileDetail = (props) => {
   }
 }
 
+const AddStudentProgramCourse = (props) => {
+  const { programCourses, baseUrl, token, callback, programId } = props
+  const [checked, setChecked] = useState([])
+
+  const handleCheckCourse = (value) => {
+    const currentIndex = checked.indexOf(value);
+    const newChecked = [...checked];
+
+    if (currentIndex === -1) {
+      newChecked.push(value);
+    } else {
+      newChecked.splice(currentIndex, 1);
+    }
+
+    setChecked(newChecked)
+  }
+
+  const handleSave = async () => {
+    const payload = { courseIds: checked }
+    try{
+      await axios.post(`${baseUrl}/student-programs/${programId}/courses`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback('Berhasil menambahkan mata kuliah untuk dikonversi')
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  return(
+    <>
+      <List sx={{ width: '100%' }}>
+        {programCourses.map((course) => (
+          <ListItem
+            disablePadding
+            secondaryAction={
+              <Chip
+                color="primary"
+                size="small"
+                label={`${course.sks} SKS`} />
+            }
+            key={course.id}>
+            <ListItemButton
+              onClick={handleCheckCourse.bind(this, course.id)}
+              sx={{ mr: 8 }}
+              dense>
+              <ListItemIcon>
+                <Checkbox
+                  edge="start"
+                  checked={checked.includes(course.id)}
+                  tabIndex={-1}
+                  disableRipple
+                />
+              </ListItemIcon>
+              <ListItemText primary={course.name} />
+            </ListItemButton>
+          </ListItem>
+        ))}
+      </List>
+      <DialogActions>
+        <Button onClick={handleSave}>
+          Simpan
+        </Button>
+      </DialogActions>
+    </>
+  )
+}
+
 const MyProgram = () => {  
   const { id } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
@@ -127,9 +205,17 @@ const MyProgram = () => {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
   const [studentProgram, setStudentProgram] = useState(null)
+  const [studentProgramCourses, setStudentProgramCourses] = useState([])
+  const [notAddedCourses, setNotAddedCourses] = useState([])
   const [open, setOpen] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
+  const [alertMessage, setAlertMessage] = useState('')
   const [field, setField] = useState(null)
+  const [expanded, setExpanded] = useState(false)
+
+  const handleChange = (panel) => (event, isExpanded) => {
+    setExpanded(isExpanded ? panel : false)
+  }
 
   const handleFetchData = async () => {
     const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
@@ -138,11 +224,29 @@ const MyProgram = () => {
     setStudentProgram(response.data.studentProgram)
   }
 
+  const handleFetchStudentProgramCourses = async () => {
+    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    setStudentProgramCourses(response.data.studentProgramCourses)
+    console.log(response.data.studentProgramCourses)
+  }
+
+  const handleSetNotAddedCourses = (allData, addedData) => {
+    const notAdded = allData.filter((item) => {
+      return !addedData.some((item2) => {
+        return item2.courseId === item.id
+      })
+    })
+    setNotAddedCourses(notAdded)
+  }
+
   const fetchStudentProgram = async () => {
     setIsLoading(true)
     setIsLoaded(false)
     try {
       await handleFetchData()
+      await handleFetchStudentProgramCourses()
     } catch (e) {
       console.log(e)
     }
@@ -160,47 +264,65 @@ const MyProgram = () => {
     setModalOpen()
   }
 
+  const handleAddStudentProgramCourse = async () => {
+    if(notAddedCourses.length === 0)
+      handleSetNotAddedCourses(studentProgram.program.courses, studentProgramCourses)
+    setField(null)
+    setModalOpen()
+  }
+
   const setModalOpen = () => {
     setOpen(!open)
   }
 
-  const callback = () => {
+  const callback = (msg) => {
+    setNotAddedCourses([])
     handleFetchData()
+    handleFetchStudentProgramCourses()
+    setAlertMessage(msg)
     setShowAlert(true)
     setModalOpen()
   }
 
   useEffect(() => {
     if (!isLoaded && !isLoading) fetchStudentProgram()
-    else if (isLoaded && studentProgram.programId != id) fetchStudentProgram()
+    else if (isLoaded && parseInt(studentProgram.programId) !== parseInt(id))
+      fetchStudentProgram()
   })
 
   if (isLoading) {
     return (
       <>Loading</>
     )
-  } else if(isLoaded && studentProgram.programId == id) {
+  } else if(isLoaded && parseInt(studentProgram.programId) === parseInt(id)) {
     return (
       <Grid container spacing={2}>
         {showAlert &&
           <Grid item xs={12}>
             <Alert severity="success">
               <AlertTitle>Sukses</AlertTitle>
-              Kamu telah berhasil mengupload file.
+              {alertMessage}
             </Alert>
           </Grid>
         }
         <Modal
           open={open}
           setOpen={setModalOpen}
-          title="Upload file"
+          title={field ? "Upload file" : "Tambah konversi mata kuliah"}
           children={
-            <UploadFileDetail
-              data={studentProgram}
-              baseUrl={baseUrl}
-              token={token}
-              field={field}
-              callback={callback} />
+            field ? 
+              <UploadFileDetail
+                data={studentProgram}
+                baseUrl={baseUrl}
+                token={token}
+                field={field}
+                callback={callback} />
+            : <AddStudentProgramCourse
+                programId={id}
+                programCourses={notAddedCourses}
+                baseUrl={baseUrl}
+                token={token}
+                callback={callback} />
           } />
         <Grid item xs={12} md={7} lg={8}>
           <Paper
@@ -238,13 +360,70 @@ const MyProgram = () => {
               </Grid>
               <Grid item xs={6}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button variant='contained' color='primary' size="small" >
+                  <Button
+                    onClick={handleAddStudentProgramCourse}
+                    variant='contained'
+                    color='primary'
+                    size="small" >
                     Tambah Matkul
                   </Button>
                 </Box>
               </Grid>
             </Grid>
-            <Accordion />
+            <Box>
+              {studentProgramCourses.map((item, index) => (
+                <Accordion
+                  key={index}
+                  expanded={expanded === item.courseId}
+                  onChange={handleChange(item.courseId)}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMore />}
+                    aria-controls="panel1bh-content"
+                    id="panel1bh-header"
+                  >
+                    <Typography sx={{ width: '33%', flexShrink: 0 }}>
+                      {item.course.name}
+                    </Typography>
+                    <Chip
+                      label={`${item.course.sks} SKS`}
+                      color="primary"
+                      size="small"
+                      sx={{ marginLeft: 2 }}/>
+                    <Chip
+                      label="Disetujui"
+                      color="success"
+                      size="small"
+                      sx={{ marginLeft: 1 }}/>
+                  </AccordionSummary>
+                  <AccordionDetails>
+                    <Typography variant='body2'>
+                      Total jam konversi: <b>24 jam 17 menit</b> dari <b>48 jam</b>
+                    </Typography>
+                    <LinearProgress 
+                      variant="determinate" 
+                      value={ ((24/48)+((17/60)/48))*100 } 
+                      sx={{ width: '100%', marginTop: 1 }} />
+                    <Typography variant='body1' sx={{ marginTop: 3 }}>
+                      Daftar CPMK:
+                    </Typography>
+                    <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
+                      {item.course?.cpmks?.map((cpmk, index) => (
+                        <ListItem sx={{ padding: 0}} key={cpmk.achievementCode}>
+                          <ListItemIcon>
+                            <ArrowRight sx={{ padding: 0 }} />
+                          </ListItemIcon>
+                          <ListItemText>
+                            <Typography variant='overline'>
+                              {cpmk.achievementCode} - {cpmk.title}
+                            </Typography>
+                          </ListItemText>
+                        </ListItem>
+                      ))}
+                    </List>
+                  </AccordionDetails>
+                </Accordion>
+              ))}
+            </Box>
           </Paper>
         </Grid>
         <Grid item xs={12} md={5} lg={4}>
@@ -260,42 +439,42 @@ const MyProgram = () => {
                 <Typography variant='h6'>
                   Status
                 </Typography>
-                { studentProgram.status == 'applied' &&
+                { studentProgram.status === 'applied' &&
                   <>
                     <Chip label="Terdaftar" color="secondary" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
                       Menunggu persetujuan dari jurusan
                     </Typography>
                   </>
-                } { studentProgram.status == 'approved' &&
+                } { studentProgram.status === 'approved' &&
                   <>
                     <Chip label="Disetujui" color="success" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
                       Menunggu upload dokumen penerimaan di instansi oleh mahasiswa
                     </Typography>
                   </>
-                } { studentProgram.status == 'rejected' &&
+                } { studentProgram.status === 'rejected' &&
                   <>
                     <Chip label="Ditolak" color="error" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
                       Mohon maaf permohonan pendaftaran anda ditolak. Silakan hubungi jurusan untuk informasi lebih lanjut.
                     </Typography>
                   </>
-                } { studentProgram.status == 'accepted' && isLater(studentProgram.program.startsAt) &&
+                } { studentProgram.status === 'accepted' && isLater(studentProgram.program.startsAt) &&
                   <>
                     <Chip label="Diterima" color="success" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
                       Selamat anda diterima di program ini. program ini akan dimulai pada tanggal {formatDate(studentProgram.program.startsAt)}
                     </Typography>
                   </>
-                } { studentProgram.status == 'accepted' && isInRange(new Date(), studentProgram.program.openAt, studentProgram.program.closeAt) &&
+                } { studentProgram.status === 'accepted' && isInRange(new Date(), studentProgram.program.openAt, studentProgram.program.closeAt) &&
                   <>
                     <Chip label="Sedang berlangsung" color="info" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
                       Program sedang berlangsung.
                     </Typography>
                   </>
-                } { studentProgram.status == 'accepted' &&
+                } { studentProgram.status === 'accepted' &&
                   !isLater(new Date(studentProgram.program.closeAt).setDate(new Date(studentProgram.program.closeAt).getDate() + 1)) &&
                   <>
                     <Chip label="Selesai" color="primary" size="small" sx={{ marginTop: 1 }}/>
