@@ -1,28 +1,31 @@
 import * as React from 'react'
-import PropTypes from 'prop-types'
-import { alpha } from '@mui/material/styles'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TablePagination from '@mui/material/TablePagination'
-import TableRow from '@mui/material/TableRow'
-import TableSortLabel from '@mui/material/TableSortLabel'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
-import Paper from '@mui/material/Paper'
-import Checkbox from '@mui/material/Checkbox'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Switch from '@mui/material/Switch'
-import DeleteIcon from '@mui/icons-material/Delete'
-import FilterListIcon from '@mui/icons-material/FilterList'
-import { visuallyHidden } from '@mui/utils'
-import { AddOutlined, Delete, DeleteOutline, Edit, EditOutlined, RemoveRedEye, Sync } from '@mui/icons-material'
-import { Button, Chip } from '@mui/material'
+import {
+  AddOutlined,
+  Delete,
+  Edit,
+  Sync
+} from '@mui/icons-material'
+import {
+  Button,
+  Grid,
+  TextField,
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Typography,
+  Paper,
+  IconButton,
+  Tooltip,
+  DialogActions
+} from '@mui/material'
+import axios from 'axios'
+import secureLocalStorage from 'react-secure-storage'
+import Modal from '../components/Modal'
 
 const EnhancedTableHead = () => {
   return (
@@ -73,41 +76,219 @@ const EnhancedTableToolbar = () => {
   )
 }
 
-const ProgramTable = () => {
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
-        <EnhancedTableToolbar />
-        <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            aria-labelledby="tableTitle"
-            size="small"
-          >
-            <EnhancedTableHead />
-            <TableBody>
-              <TableRow hover >
-                <TableCell>1</TableCell>
-                <TableCell>Dasar dasar pemrograman</TableCell>
-                <TableCell>3 SKS</TableCell>
-                <TableCell>
-                  <Button variant="outlined" color="primary" size="small" startIcon={<RemoveRedEye />}>
-                    CPMK
-                  </Button>
-                  <Button variant="outlined" color="primary" size="small" startIcon={<Edit />} sx={{ marginLeft: 1 }}>
-                    Edit
-                  </Button>
-                  <Button variant="outlined" color="error" size="small" startIcon={<Delete />} sx={{ marginLeft: 1 }}>
-                    Delete
-                  </Button>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-    </Box>
-  )
+const CPMKList = (props) => {
+  const { data, baseUrl, token, callback } = props
+  const [cpmks, setCpmks] = React.useState([])
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoaded, setIsLoaded] = React.useState(false)
+
+  const fetchCPMKs = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`${baseUrl}/courses/${data.id}/achievements`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCpmks(response.data.achievements)
+    } catch (error) {
+      console.log(error)
+    }
+    setIsLoading(false)
+    setIsLoaded(true)
+  }
+
+  const handleAddInput = (e) => {
+    setCpmks([...cpmks, { achievementCode: '', title: '' }])
+  }
+
+  const handleSaveCPMKs = async () => {
+    const achievementCodes = cpmks.map(cpmk => cpmk.achievementCode)
+    const titles = cpmks.map(cpmk => cpmk.title)
+    // const inputs = document.querySelectorAll('input')
+    // const achievementCodes = Array.from(inputs).filter((input) => {
+    //   if(input.name.includes('achievementCode')) return input.value
+    // }).map((input) => input.value)
+    // const titles = Array.from(inputs).filter((input) => {
+    //   if(input.name.includes('title')) return input.value
+    // }).map((input) => input.value)
+    try {
+      const payload = {achievementCodes, titles}
+      await axios.put(`${baseUrl}/courses/${data.id}/achievements`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback()
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  const removeCPMK = (index) => {
+    const newCPMKs = cpmks.filter((cpmk, i) => i !== index)
+    setCpmks(newCPMKs)
+  }
+
+  const handleCodeChange = (index, e) => {
+    const newCPMKs = [...cpmks]
+    newCPMKs[index].achievementCode = e.target.value
+    setCpmks(newCPMKs)
+  }
+
+  const handleTitleChange = (index, e) => {
+    const newCPMKs = [...cpmks]
+    newCPMKs[index].title = e.target.value
+    setCpmks(newCPMKs)
+  }
+
+  React.useEffect(() => {
+    if(!isLoaded && !isLoading) fetchCPMKs()
+  }, [isLoaded, isLoading])
+
+  if(isLoading) return <div>Loading...</div>
+  else{
+    return (
+      <>
+        <Button
+          onClick={handleAddInput}
+          size="small"
+          variant="contained"
+          color="primary"
+          startIcon={<AddOutlined />}
+          sx={{ mb: 2 }} >
+          Tambah CPMK
+        </Button>
+        {cpmks.map((cpmk, index) => (
+          <Grid container spacing={2} key={`${index}-gc`} sx={{ mb: 1 }}>
+            <Grid item xs={3} key={`${index}-gl`}>
+              <TextField
+                required
+                fullWidth
+                label="Kode CPMK"
+                variant="standard"
+                value={cpmk.achievementCode}
+                onChange={handleCodeChange.bind(this, index)}
+                key={`${index}-kc`} />
+            </Grid>
+            <Grid item xs={8} key={`${index}-gm`}>
+              <TextField
+                required
+                fullWidth
+                label="Nama CPMK"
+                variant="standard"
+                value={cpmk.title}
+                onChange={handleTitleChange.bind(this, index)}
+                key={`${index}-nc`} />
+            </Grid>
+            <Grid item xs={1} key={`${index}-gr`} >
+              <IconButton
+                sx={{ paddingTop: 2, paddingLeft: 0 }}
+                color="error"
+                key={`${index}-ic`}
+                onClick={removeCPMK.bind(this, index)} >
+                  <Delete />
+              </IconButton>
+            </Grid>
+          </Grid>
+        ))}
+        <DialogActions>
+          <Button
+            onClick={handleSaveCPMKs} >
+            Simpan
+          </Button>
+        </DialogActions>
+      </>
+    )
+  }
 }
 
-export default ProgramTable
+const CourseTable = () => {
+  const baseUrl = process.env.REACT_APP_API_URL
+  const token = secureLocalStorage.getItem('token')
+  const [courses, setCourses] = React.useState([])
+  const [course, setCourse] = React.useState({})
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoaded, setIsLoaded] = React.useState(false)
+  const [open, setOpen] = React.useState(false)
+
+  const fetchCourses = async () => {
+    setIsLoading(true)
+    try {
+      const response = await axios.get(`${baseUrl}/courses`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setCourses(response.data.courses)
+    } catch (error) {
+      console.log(error)
+    }
+    setIsLoading(false)
+    setIsLoaded(true)
+  }
+
+  const setModalOpen = () => {
+    setOpen(!open)
+  }
+
+  const handleCPMKClick = (course) => {
+    setCourse(course)
+    setModalOpen()
+  }
+
+  const callback = () => {
+    setModalOpen()
+  }
+
+  React.useEffect(() => {
+    if(!isLoaded && !isLoading) fetchCourses()
+  }, [isLoaded, isLoading])
+
+  if(isLoading) return <>Loading</>
+  else if(isLoaded && courses) {
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Modal
+          open={open}
+          setOpen={setModalOpen}
+          title="Daftar CPMK"
+          children={
+            <CPMKList
+              data={course}
+              baseUrl={baseUrl}
+              token={token}
+              callback={callback} />
+          } />
+        <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
+          <EnhancedTableToolbar />
+          <TableContainer>
+            <Table
+              sx={{ minWidth: 750 }}
+              aria-labelledby="tableTitle"
+              size="small"
+            >
+              <EnhancedTableHead />
+              <TableBody>
+                {courses.map((course, index) => (
+                  <TableRow hover key={course.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{course.name}</TableCell>
+                    <TableCell>{course.sks} SKS</TableCell>
+                    <TableCell>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={handleCPMKClick.bind(this, course)}
+                        startIcon={<Edit />}>
+                        CPMK
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
+    )
+  } else  return <>Empty</>
+}
+
+export default CourseTable
