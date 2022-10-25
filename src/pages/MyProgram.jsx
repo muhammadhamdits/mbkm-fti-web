@@ -202,6 +202,42 @@ const AddStudentProgramCourse = (props) => {
   )
 }
 
+const DeleteStudentProgramCourse = (props) => {
+  const { data, baseUrl, token, callback } = props
+
+  const handleDelete = async () => {
+    const payload = { courseIds: [data.courseId] }
+    try{
+      await axios.delete(`${baseUrl}/student-programs/${data.programId}/courses`,
+        { data: payload, headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback(`Berhasil menghapus mata kuliah ${data.course.name} dari program ini`)
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  return (
+    <>
+    <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Typography variant="subtitle2" gutterBottom>
+          Apakah anda yakin ingin menghapus mata kuliah <b>{data.course.name}</b> dari program ini?
+        </Typography>
+      </Grid>
+    </Grid>
+    <DialogActions>
+      <Button>
+        Batal
+      </Button>
+      <Button onClick={handleDelete}>
+        Hapus
+      </Button>
+    </DialogActions>
+  </>
+  )
+}
+
 const MyProgram = () => {  
   const { id } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
@@ -210,6 +246,7 @@ const MyProgram = () => {
   const [isLoaded, setIsLoaded] = useState(false)
   const [studentProgram, setStudentProgram] = useState(null)
   const [studentProgramCourses, setStudentProgramCourses] = useState([])
+  const [studentProgramCourse, setStudentProgramCourse] = useState(null)
   const [notAddedCourses, setNotAddedCourses] = useState([])
   const [open, setOpen] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
@@ -218,9 +255,11 @@ const MyProgram = () => {
   const [expanded, setExpanded] = useState(false)
   const [totalSks, setTotalSks] = useState(0)
   const [alertStatus, setAlertStatus] = useState('success')
+  const [isDeleting, setIsDeleting] = useState(false)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
+    if(event.target.dataset?.testid === 'DeleteIcon') return
     setExpanded(isExpanded ? panel : false)
   }
 
@@ -282,8 +321,11 @@ const MyProgram = () => {
     setOpen(!open)
   }
 
-  const handleDeleteStudentProgramCourse = async (courseId) => {
-    
+  const handleDeleteStudentProgramCourse = async (studentProgramCourse) => {
+    setStudentProgramCourse(studentProgramCourse)
+    setIsDeleting(true)
+    setField(null)
+    setModalOpen()
   }
 
   const callback = (msg, status = 'success') => {
@@ -296,6 +338,8 @@ const MyProgram = () => {
     }
     setShowAlert(true)
     setModalOpen()
+    setIsDeleting(false)
+    setField(null)
   }
 
   useEffect(() => {
@@ -322,7 +366,11 @@ const MyProgram = () => {
         <Modal
           open={open}
           setOpen={setModalOpen}
-          title={field ? "Upload file" : "Tambah konversi mata kuliah"}
+          title={
+            field ? "Upload file" : 
+            isDeleting ? "Hapus mata kuliah?" : 
+            "Tambah konversi mata kuliah"
+          }
           children={
             field ? 
               <UploadFileDetail
@@ -330,6 +378,12 @@ const MyProgram = () => {
                 baseUrl={baseUrl}
                 token={token}
                 field={field}
+                callback={callback} />
+            : isDeleting ?
+              <DeleteStudentProgramCourse
+                data={studentProgramCourse}
+                baseUrl={baseUrl}
+                token={token}
                 callback={callback} />
             : <AddStudentProgramCourse
                 programId={id}
@@ -399,7 +453,7 @@ const MyProgram = () => {
                     <IconButton
                       size="small"
                       color="error"
-                      onClick={handleDeleteStudentProgramCourse.bind(this, item.courseId)}
+                      onClick={handleDeleteStudentProgramCourse.bind(this, item)}
                       sx={{ ml: -3, mr: 1, mt: -1 }} >
                         <Delete />
                     </IconButton>
