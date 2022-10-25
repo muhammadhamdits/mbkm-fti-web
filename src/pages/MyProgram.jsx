@@ -21,7 +21,8 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  LinearProgress
+  LinearProgress,
+  IconButton
 } from '@mui/material'
 import {
   Download,
@@ -29,14 +30,15 @@ import {
   Upload,
   WorkspacePremium,
   ExpandMore,
-  ArrowRight
+  ArrowRight,
+  Delete
 } from '@mui/icons-material'
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
-import { formatDate, isLater, isInRange } from '../assets/utils'
+import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
 
 const UploadFileDetail = (props) => {
   const { data, baseUrl, token, callback, field } = props
@@ -155,7 +157,9 @@ const AddStudentProgramCourse = (props) => {
       )
       callback('Berhasil menambahkan mata kuliah untuk dikonversi')
     } catch (err) {
-      console.log(err)
+      if(err.response?.status === 400){
+        callback(err.response.data.error, 'error')
+      }else console.log(err)
     }
   }
 
@@ -212,8 +216,11 @@ const MyProgram = () => {
   const [alertMessage, setAlertMessage] = useState('')
   const [field, setField] = useState(null)
   const [expanded, setExpanded] = useState(false)
+  const [totalSks, setTotalSks] = useState(0)
+  const [alertStatus, setAlertStatus] = useState('success')
 
   const handleChange = (panel) => (event, isExpanded) => {
+    if(event.target.className.baseVal === '') return
     setExpanded(isExpanded ? panel : false)
   }
 
@@ -229,7 +236,7 @@ const MyProgram = () => {
       headers: { Authorization: `Bearer ${token}` }
     })
     setStudentProgramCourses(response.data.studentProgramCourses)
-    console.log(response.data.studentProgramCourses)
+    setTotalSks(response.data.totalSks)
   }
 
   const handleSetNotAddedCourses = (allData, addedData) => {
@@ -275,11 +282,18 @@ const MyProgram = () => {
     setOpen(!open)
   }
 
-  const callback = (msg) => {
-    setNotAddedCourses([])
-    handleFetchData()
-    handleFetchStudentProgramCourses()
+  const handleDeleteStudentProgramCourse = async (courseId) => {
+    
+  }
+
+  const callback = (msg, status = 'success') => {
     setAlertMessage(msg)
+    setAlertStatus(status)
+    if(status === 'success'){
+      setNotAddedCourses([])
+      handleFetchData()
+      handleFetchStudentProgramCourses()
+    }
     setShowAlert(true)
     setModalOpen()
   }
@@ -299,8 +313,8 @@ const MyProgram = () => {
       <Grid container spacing={2}>
         {showAlert &&
           <Grid item xs={12}>
-            <Alert severity="success">
-              <AlertTitle>Sukses</AlertTitle>
+            <Alert severity={alertStatus}>
+              <AlertTitle>{capitalize(alertStatus)}</AlertTitle>
               {alertMessage}
             </Alert>
           </Grid>
@@ -355,12 +369,13 @@ const MyProgram = () => {
             <Grid container spacing={2} sx={{ marginBottom: 1 }}>
               <Grid item xs={6}>
                 <Typography variant='caption'>
-                  Total SKS: 10 dari 20
+                  Total SKS: {totalSks} dari {studentProgram.program.sksCount}
                 </Typography>
               </Grid>
               <Grid item xs={6}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   <Button
+                    disabled={totalSks === studentProgram.program.sksCount}
                     onClick={handleAddStudentProgramCourse}
                     variant='contained'
                     color='primary'
@@ -380,7 +395,14 @@ const MyProgram = () => {
                     expandIcon={<ExpandMore />}
                     aria-controls="panel1bh-content"
                     id="panel1bh-header"
-                  >
+                  > 
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={handleDeleteStudentProgramCourse.bind(this, item.courseId)}
+                      sx={{ ml: -3, mr: 1, mt: -1 }} >
+                        <Delete />
+                    </IconButton>
                     <Typography sx={{ width: '33%', flexShrink: 0 }}>
                       {item.course.name}
                     </Typography>
