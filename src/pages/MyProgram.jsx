@@ -22,7 +22,10 @@ import {
   AccordionSummary,
   AccordionDetails,
   LinearProgress,
-  IconButton
+  IconButton,
+  ListItemSecondaryAction,
+  Menu,
+  MenuItem
 } from '@mui/material'
 import {
   Download,
@@ -31,11 +34,14 @@ import {
   WorkspacePremium,
   ExpandMore,
   ArrowRight,
-  Delete
+  Delete,
+  Edit,
+  EditOff,
+  Save
 } from '@mui/icons-material'
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import { useParams } from 'react-router-dom'
+import { useParams, useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
@@ -238,8 +244,85 @@ const DeleteStudentProgramCourse = (props) => {
   )
 }
 
+const BasicMenu = (props) => {
+  const { lecturers, setCallback, token, baseUrl, studentProgram, callback } = props
+  const [anchorEl, setAnchorEl] = useState(null)
+  const open = Boolean(anchorEl)
+  const [selectedId, setSelectedId] = useState(null)
+
+  const handleClick = (event) => { setAnchorEl(event.currentTarget) }
+  const handleClose = () => { setAnchorEl(null) }
+  const handleChange = (lecturerId) => {
+    setCallback(lecturerId)
+    setSelectedId(lecturerId)
+    handleClose()
+  }
+  const handleCancel = () => {
+    setCallback(null)
+    setSelectedId(null)
+  }
+  const handleSave = async () => {
+    const payload = {
+      studentId: studentProgram.studentId,
+      programId: studentProgram.programId,
+      lecturerId: selectedId
+    }
+    await axios.put(`${baseUrl}/student-programs/lecturer`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setSelectedId(null)
+    callback('Berhasil assign dosen pembimbing ke program ini')
+  }
+
+  return (
+    <>
+      { !selectedId &&
+        <IconButton
+          color="warning"
+          id="basic-button"
+          aria-controls={open ? 'basic-menu' : undefined}
+          aria-haspopup="true"
+          aria-expanded={open ? 'true' : undefined}
+          onClick={handleClick}
+        >
+          <Edit />
+        </IconButton>
+      }
+      {selectedId &&
+        <>
+          <IconButton color="error" onClick={handleCancel}>
+            <EditOff />
+          </IconButton>
+          <IconButton color="success" onClick={handleSave}>
+            <Save />
+          </IconButton>
+        </>
+      }
+      <Menu
+        id="basic-menu"
+        anchorEl={anchorEl}
+        open={open}
+        onClose={handleClose}
+        MenuListProps={{'aria-labelledby': 'basic-button'}}
+        transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+        anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+      >
+        {lecturers.map((lecturer) => (
+          <MenuItem
+            key={lecturer.id}
+            onClick={handleChange.bind(this, lecturer.id)} >
+            {lecturer.name}
+          </MenuItem>
+        ))}
+      </Menu>
+    </>
+  )
+}
+
 const MyProgram = () => {  
-  const { id } = useParams()
+  const { id, studentId } = useParams()
+  const user = useOutletContext()
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
   const [isLoading, setIsLoading] = useState(false)
@@ -256,6 +339,8 @@ const MyProgram = () => {
   const [totalSks, setTotalSks] = useState(0)
   const [alertStatus, setAlertStatus] = useState('success')
   const [isDeleting, setIsDeleting] = useState(false)
+  const [lecturers, setLecturers] = useState([])
+  const [lecturer, setLecturer] = useState(null)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
@@ -264,10 +349,20 @@ const MyProgram = () => {
   }
 
   const handleFetchData = async () => {
-    const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    let query = ``
+    if(user.role === 'admin') query = `?studentId=${studentId}`
+    const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
     setStudentProgram(response.data.studentProgram)
+    setLecturer(response.data.studentProgram.lecturer)
+  }
+
+  const handleFetchLecturers = async () => {
+    const response = await axios.get(`${baseUrl}/lecturers`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    setLecturers(response.data.lecturers)
   }
 
   const handleFetchStudentProgramCourses = async () => {
@@ -293,6 +388,7 @@ const MyProgram = () => {
     try {
       await handleFetchData()
       await handleFetchStudentProgramCourses()
+      await handleFetchLecturers()
     } catch (e) {
       console.log(e)
     }
@@ -328,6 +424,10 @@ const MyProgram = () => {
     setModalOpen()
   }
 
+  const handleSetLecturer = (lecturerId) => {
+    setLecturer(lecturers.find((lecturer) => lecturer.id === lecturerId))
+  }
+
   const callback = (msg, status = 'success') => {
     setAlertMessage(msg)
     setAlertStatus(status)
@@ -337,7 +437,7 @@ const MyProgram = () => {
       handleFetchStudentProgramCourses()
     }
     setShowAlert(true)
-    setModalOpen()
+    setOpen(false)
     setIsDeleting(false)
     setField(null)
   }
@@ -413,7 +513,21 @@ const MyProgram = () => {
                 </ListItemAvatar>
                 <ListItemText
                   primary="Dosen Pembimbing"
-                  secondary="Husnil Kamil, M.T" />
+                  secondary={
+                    lecturer ? lecturer.name : 
+                    <Typography variant='body2' color='error'>
+                      Belum ada dosen pembimbing
+                    </Typography>
+                  } />
+                <ListItemSecondaryAction>
+                  <BasicMenu
+                    token={token}
+                    baseUrl={baseUrl}
+                    callback={callback}
+                    lecturers={lecturers}
+                    studentProgram={studentProgram}
+                    setCallback={handleSetLecturer} />
+                </ListItemSecondaryAction>
               </ListItem>
             </List>
   
@@ -428,14 +542,16 @@ const MyProgram = () => {
               </Grid>
               <Grid item xs={6}>
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <Button
-                    disabled={totalSks === studentProgram.program.sksCount}
-                    onClick={handleAddStudentProgramCourse}
-                    variant='contained'
-                    color='primary'
-                    size="small" >
-                    Tambah Matkul
-                  </Button>
+                  {user.role === 'student' &&
+                    <Button
+                      disabled={totalSks === studentProgram.program.sksCount}
+                      onClick={handleAddStudentProgramCourse}
+                      variant='contained'
+                      color='primary'
+                      size="small" >
+                      Tambah Matkul
+                    </Button>
+                  }
                 </Box>
               </Grid>
             </Grid>
@@ -450,13 +566,15 @@ const MyProgram = () => {
                     aria-controls="panel1bh-content"
                     id="panel1bh-header"
                   > 
-                    <IconButton
-                      size="small"
-                      color="error"
-                      onClick={handleDeleteStudentProgramCourse.bind(this, item)}
-                      sx={{ ml: -3, mr: 1, mt: -1 }} >
-                        <Delete />
-                    </IconButton>
+                    {user.role === 'student' &&
+                      <IconButton
+                        size="small"
+                        color="error"
+                        onClick={handleDeleteStudentProgramCourse.bind(this, item)}
+                        sx={{ ml: -3, mr: 1, mt: -1 }} >
+                          <Delete />
+                      </IconButton>
+                    }
                     <Typography sx={{ width: '33%', flexShrink: 0 }}>
                       {item.course.name}
                     </Typography>
@@ -590,18 +708,22 @@ const MyProgram = () => {
                     handleUploadFile.bind(this, 'acceptanceFile')
                   }
                   disabled={
-                    ['applied', 'rejected'].includes(studentProgram.status)
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    (['approved'].includes(studentProgram.status) && user.role !== 'student')
+                    
                   }
                   variant='outlined'
                   color='primary'
                   size="small"
                   startIcon={
                     ['applied', 'rejected'].includes(studentProgram.status) ? <Lock /> : 
+                    ['approved'].includes(studentProgram.status) && user.role !== 'student' ? <Lock /> :
                     ['approved'].includes(studentProgram.status) ? <Upload /> :
                     <Download />
                   }>
                   {
                     ['applied', 'rejected'].includes(studentProgram.status) ? 'Terkunci' :
+                    ['approved'].includes(studentProgram.status) && user.role !== 'student' ? 'Terkunci' :
                     ['approved'].includes(studentProgram.status) ? 'Unggah' :
                     'Unduh'
                   }
