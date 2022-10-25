@@ -23,6 +23,7 @@ import {
   Typography,
   Paper
 } from '@mui/material'
+import { Link } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import axios from 'axios'
 import Modal from '../components/Modal'
@@ -257,7 +258,12 @@ const ProgramTable = () => {
                         {index + 1}
                       </TableCell>
                       <TableCell>
-                        {sP.student.name}
+                        <Link
+                          style={{ textDecoration: 'none', 
+                          color: '#005FFF' }}
+                          to={`/student-programs/${sP.programId}/${sP.studentId}`}>
+                          {sP.student.name}
+                        </Link>
                       </TableCell>
                       <TableCell>
                         {sP.program.name}
