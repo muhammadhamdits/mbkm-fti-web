@@ -466,8 +466,16 @@ const MyProgram = () => {
                       size="small"
                       sx={{ marginLeft: 2 }}/>
                     <Chip
-                      label="Disetujui"
-                      color="success"
+                      label={
+                        item.status === 'proposed' ? 'Diajukan' :
+                        item.status === 'approved' ? 'Disetujui' :
+                        'Ditolak'
+                      }
+                      color={
+                        item.status === 'proposed' ? 'secondary' :
+                        item.status === 'approved' ? 'success' :
+                        'error'
+                      }
                       size="small"
                       sx={{ marginLeft: 1 }}/>
                   </AccordionSummary>
