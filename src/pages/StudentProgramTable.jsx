@@ -48,6 +48,9 @@ const EnhancedTableHead = () => {
           Instansi
         </TableCell>
         <TableCell >
+          Dosen Pembimbing
+        </TableCell>
+        <TableCell >
           Status
         </TableCell>
       </TableRow>
@@ -273,6 +276,9 @@ const ProgramTable = () => {
                       </TableCell>
                       <TableCell>
                         {sP.program.name}
+                      </TableCell>
+                      <TableCell>
+                        {sP.lecturer?.name || 'Belum ada'}
                       </TableCell>
                       <TableCell>
                       { sP.status === 'applied' ? 
