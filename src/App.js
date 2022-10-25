@@ -29,6 +29,7 @@ const App = () => {
             <Route path="/courses" element={<CourseTable />} />
             <Route path="/program-types" element={<ProgramTypeTable />} />
             <Route path="/student-programs" element={<StudentProgramTable />} />
+            <Route path="/student-programs/:id/:studentId" element={<MyProgram />} />
             <Route path="/agencies" element={<AgencyTable />} />
             <Route path="/users" element={<UserTable />} />
           </Route>
