@@ -372,8 +372,8 @@ const ConfirmStudentProgramCourse = (props) => {
   const courseNames = data.program.courses.map((course) => {
     if(courseIds.includes(course.id)){
       return course.name
-    }
-  }).filter((course) => course !== undefined).join(', ')
+    } else return null
+  }).filter((course) => course !== null).join(', ')
 
   return(
     <>
@@ -434,6 +434,7 @@ const MyProgram = () => {
   const handleFetchData = async () => {
     let query = ``
     if(user.role !== 'student') query = `?studentId=${studentId}`
+    else query = `?studentId=${user.id}`
     const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -795,7 +796,7 @@ const MyProgram = () => {
                       Selamat anda diterima di program ini. program ini akan dimulai pada tanggal {formatDate(studentProgram.program.startsAt)}
                     </Typography>
                   </>
-                } { studentProgram.status === 'accepted' && isInRange(new Date(), studentProgram.program.openAt, studentProgram.program.closeAt) &&
+                } { studentProgram.status === 'accepted' && isInRange(new Date(), studentProgram.program.startsAt, studentProgram.program.endsAt) &&
                   <>
                     <Chip label="Sedang berlangsung" color="info" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">

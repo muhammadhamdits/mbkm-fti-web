@@ -13,6 +13,7 @@ import AgencyTable from './pages/AgencyTable'
 import UserTable from './pages/UserTable'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
+import LogbookDetail from './pages/LogbookDetail'
 
 const App = () => {
   return (
@@ -24,7 +25,9 @@ const App = () => {
             <Route index element={<Home />} />
             <Route path="/programs/:id" element={<Program />} />
             <Route path="/my-programs/:id" element={<MyProgram />} />
-            <Route path="/logbooks/1" element={<Logbook />} />
+            <Route path="/logbooks/:id" element={<Logbook />}>
+              <Route path="detail/:logbookId" element={<LogbookDetail />} />
+            </Route>
             <Route path="/programs" element={<ProgramTable />} />
             <Route path="/courses" element={<CourseTable />} />
             <Route path="/program-types" element={<ProgramTypeTable />} />
