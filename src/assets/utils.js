@@ -7,6 +7,22 @@ const formatDate = (date) => {
   return `${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()}`
 }
 
+const getHourMinute = (date) => {
+  const d = new Date(date)
+  const hourMinute = `${d.getHours()}:${d.getMinutes()}`
+  return hourMinute
+}
+
+const getHourMinuteDiff = (startsAt, endsAt) => {
+  const d1 = new Date(startsAt)
+  const d2 = new Date(endsAt)
+  const diff = d2.getTime() - d1.getTime()
+  let tempDiff = new Date(diff)
+  tempDiff.setSeconds(tempDiff.getSeconds() + 60)
+  const diffDate = new Date(tempDiff)
+  return `${diffDate.getHours()} Jam ${diffDate.getMinutes()} menit`
+}
+
 const countMonthsDays = (dateStart, dateEnd) => {
   const d1 = new Date(dateStart)
   const d2 = new Date(dateEnd)
@@ -44,4 +60,14 @@ const capitalize = (str) => {
 
 const delay = ms => new Promise(res => setTimeout(res, ms))
 
-export { formatDate, countMonthsDays, capitalize, countDays, isInRange, isLater, delay }
+export {
+  formatDate,
+  countMonthsDays,
+  capitalize,
+  countDays,
+  isInRange,
+  isLater,
+  delay,
+  getHourMinute,
+  getHourMinuteDiff
+}

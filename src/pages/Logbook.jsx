@@ -5,16 +5,11 @@ import {
   Button,
   ListItemAvatar,
   ListItemText,
-  ListItem,
   ListItemIcon,
   List,
   Avatar,
   Box,
-  Chip,
   ListItemButton,
-  InputBase,
-  IconButton,
-  Divider,
   TextField,
   MenuItem,
   Select,
@@ -22,18 +17,18 @@ import {
   InputLabel,
   DialogActions
 } from '@mui/material'
-import { CheckCircle, DangerousRounded, Download, Lock, Upload, RemoveCircle, Send } from '@mui/icons-material'
-import Accordion from '../components/Accordion'
-import MenuIcon from '@mui/icons-material/Menu'
-import SearchIcon from '@mui/icons-material/Search'
-import DirectionsIcon from '@mui/icons-material/Directions'
-import axios from 'axios'
-import { useEffect, useState, useRef } from 'react'
-import secureLocalStorage from 'react-secure-storage'
-import { Outlet, useParams, useNavigate } from 'react-router-dom'
-import Modal from '../components/Modal'
+import {
+  CheckCircle,
+  DangerousRounded,
+  RemoveCircle
+} from '@mui/icons-material'
+import { useState } from 'react'
 import { DateTimePicker } from '@mui/x-date-pickers'
+import { Outlet, useParams, useNavigate } from 'react-router-dom'
+import axios from 'axios'
 import moment from 'moment'
+import secureLocalStorage from 'react-secure-storage'
+import Modal from '../components/Modal'
 
 const CreateLogbookForm = (props) => {
   const { baseUrl, token, callback, courses, programId } = props
@@ -280,9 +275,10 @@ const MyProgram = () => {
                     primary={logbook.title}
                     secondary={logbook.description} />
                   <ListItemIcon>
-                    <CheckCircle color='success' />
-                    <RemoveCircle color='disable' />
-                    <DangerousRounded color='error' />
+                    { logbook.status === 'proposed' ? <RemoveCircle color='secondary' /> :
+                      logbook.status === 'accepted' ? <CheckCircle color='success' /> :
+                      <DangerousRounded color='error' />
+                    }
                   </ListItemIcon>
                 </ListItemButton>
               ))}
