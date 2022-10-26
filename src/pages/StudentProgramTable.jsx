@@ -23,7 +23,7 @@ import {
   Typography,
   Paper
 } from '@mui/material'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import axios from 'axios'
 import Modal from '../components/Modal'
@@ -91,7 +91,7 @@ const StatusProgramDetail = (props) => {
     setReason(e.target.value)
   }
 
-  const handleUpdateStatus = () => {
+  const handleUpdateStatus = async () => {
     try{
       const payload = {
         studentId: data.studentId,
@@ -99,7 +99,7 @@ const StatusProgramDetail = (props) => {
         status: status,
         reason: reason
       }
-      const response = axios.put(`${baseUrl}/student-programs/status`, payload, {
+      await axios.put(`${baseUrl}/student-programs/status`, payload, {
         headers: { Authorization: `Bearer ${token}` }
       })
       callback(payload)
@@ -172,6 +172,7 @@ const StdSelect = (props) => {
 }
 
 const ProgramTable = () => {
+  const user = useOutletContext()
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const [studentPrograms, setStudentPrograms] = React.useState([])
@@ -187,7 +188,6 @@ const ProgramTable = () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       setStudentPrograms(response.data.studentPrograms)
-      console.log(response.data.studentPrograms)
     } catch (error) {
       console.log(error)
     }
@@ -196,6 +196,7 @@ const ProgramTable = () => {
   }
 
   const handleStatusClick = (data) => {
+    if(user.role !== 'admin') return
     setStudentProgram(data)
     setModalOpen()
   }
@@ -220,7 +221,7 @@ const ProgramTable = () => {
 
   React.useEffect(() => {
     if(!isLoaded) fetchStudentPrograms()
-  }, [isLoaded])
+  })
 
   if(isLoading) {
     return (

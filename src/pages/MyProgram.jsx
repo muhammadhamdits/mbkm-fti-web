@@ -341,16 +341,18 @@ const MyProgram = () => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [lecturers, setLecturers] = useState([])
   const [lecturer, setLecturer] = useState(null)
+  const [checked, setChecked] = useState([])
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
     if(event.target.dataset?.testid === 'DeleteIcon') return
+    if(event.target.type === 'checkbox') return
     setExpanded(isExpanded ? panel : false)
   }
 
   const handleFetchData = async () => {
     let query = ``
-    if(user.role === 'admin') query = `?studentId=${studentId}`
+    if(user.role !== 'student') query = `?studentId=${studentId}`
     const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -426,6 +428,18 @@ const MyProgram = () => {
 
   const handleSetLecturer = (lecturerId) => {
     setLecturer(lecturers.find((lecturer) => lecturer.id === lecturerId))
+  }
+
+  const handleConfirmCourse = async () => {
+  }
+
+  const handleCheck = (courseId) => {
+    if(checked.includes(courseId)) {
+      setChecked(checked.filter((id) => id !== courseId))
+    }else{
+      const newChecked = [...checked, courseId]
+      setChecked(newChecked)
+    }
   }
 
   const callback = (msg, status = 'success') => {
@@ -520,13 +534,15 @@ const MyProgram = () => {
                     </Typography>
                   } />
                 <ListItemSecondaryAction>
-                  <BasicMenu
-                    token={token}
-                    baseUrl={baseUrl}
-                    callback={callback}
-                    lecturers={lecturers}
-                    studentProgram={studentProgram}
-                    setCallback={handleSetLecturer} />
+                  {user.role === 'admin' &&
+                    <BasicMenu
+                      token={token}
+                      baseUrl={baseUrl}
+                      callback={callback}
+                      lecturers={lecturers}
+                      studentProgram={studentProgram}
+                      setCallback={handleSetLecturer} />
+                  }
                 </ListItemSecondaryAction>
               </ListItem>
             </List>
@@ -551,6 +567,15 @@ const MyProgram = () => {
                       size="small" >
                       Tambah Matkul
                     </Button>
+                  }{ user.role === 'lecturer' &&
+                    <Button
+                      disabled={checked.length === 0}
+                      onClick={handleConfirmCourse}
+                      variant='contained'
+                      color='primary'
+                      size="small" >
+                      Konfirmasi Matkul
+                    </Button>
                   }
                 </Box>
               </Grid>
@@ -574,6 +599,12 @@ const MyProgram = () => {
                         sx={{ ml: -3, mr: 1, mt: -1 }} >
                           <Delete />
                       </IconButton>
+                    }{user.role === 'lecturer' &&
+                      <Checkbox
+                        checked={checked.includes(item.courseId)}
+                        onChange={handleCheck.bind(this, item.courseId)}
+                        inputProps={{ 'aria-label': 'primary checkbox' }}
+                        sx={{ ml: -3, mr: 1, mt: -1 }} />
                     }
                     <Typography sx={{ width: '33%', flexShrink: 0 }}>
                       {item.course.name}
