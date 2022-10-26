@@ -372,8 +372,8 @@ const ConfirmStudentProgramCourse = (props) => {
   const courseNames = data.program.courses.map((course) => {
     if(courseIds.includes(course.id)){
       return course.name
-    }
-  }).filter((course) => course !== undefined).join(', ')
+    } else return null
+  }).filter((course) => course !== null).join(', ')
 
   return(
     <>
