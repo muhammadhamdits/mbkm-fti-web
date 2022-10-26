@@ -19,6 +19,36 @@ import secureLocalStorage from 'react-secure-storage'
 import { useState } from 'react'
 import { formatDate, getHourMinute, getHourMinuteDiff } from '../assets/utils'
 
+const RightChat = ({ text }) => {
+  return(
+    <ListItem sx={{
+      width: '67%',
+      marginLeft: '30%',
+      bgcolor: '#ddd',
+      paddingTop: 0,
+      paddingBottom: 0,
+      marginBottom: 1 }}>
+      <ListItemText
+        primary={text} />
+    </ListItem>
+  )
+}
+
+const LeftChat = ({ text }) => {
+  return(
+    <ListItem sx={{ 
+      width: '67%',
+      bgcolor: '#ddd',
+      paddingTop: 0,
+      paddingBottom: 0,
+      paddingLeft: 1,
+      marginBottom: 1 }}>
+      <ListItemText
+        primary={text} />
+    </ListItem>
+  )
+}
+
 const LogbookDetail = () => {
   const { logbookId } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
@@ -85,45 +115,10 @@ const LogbookDetail = () => {
             </Typography>
             <Box sx={{ maxHeight: 160, overflowY: 'scroll' }} >
               <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                <ListItem sx={{
-                  width: '67%',
-                  marginLeft: '30%',
-                  bgcolor: '#ddd',
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  marginBottom: 1 }}>
-                  <ListItemText
-                    primary='Ini salah tarok ini, seharusnya di CPMK Data Mining, perbaiki lagi ya' />
-                </ListItem>
-                <ListItem sx={{ 
-                  width: '67%',
-                  bgcolor: '#ddd',
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  paddingLeft: 1,
-                  marginBottom: 1 }}>
-                  <ListItemText
-                    primary="Halo pak, saya sudah menyelesaikan tugasnya" />
-                </ListItem>
-                <ListItem sx={{
-                  width: '67%',
-                  marginLeft: '30%',
-                  bgcolor: '#ddd',
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  marginBottom: 1 }}>
-                  <ListItemText
-                    primary='Ok, terimakasih' />
-                </ListItem>
-                <ListItem sx={{
-                  width: '67%',
-                  bgcolor: '#ddd',
-                  paddingTop: 0,
-                  paddingBottom: 0,
-                  marginBottom: 1 }}>
-                  <ListItemText
-                    primary='Sama-sama Pak' />
-                </ListItem>
+                <RightChat text='Ini salah tarok ini, seharusnya di CPMK Data Mining, perbaiki lagi ya' />
+                <LeftChat text="Halo pak, saya sudah menyelesaikan tugasnya" />
+                <RightChat text='Ok, terimakasih' />
+                <LeftChat text='Sama-sama Pak' />
               </List>
             </Box>
             <Paper
