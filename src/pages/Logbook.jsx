@@ -30,7 +30,7 @@ import DirectionsIcon from '@mui/icons-material/Directions'
 import axios from 'axios'
 import { useEffect, useState, useRef } from 'react'
 import secureLocalStorage from 'react-secure-storage'
-import { Outlet, useParams } from 'react-router-dom'
+import { Outlet, useParams, useNavigate } from 'react-router-dom'
 import Modal from '../components/Modal'
 import { DateTimePicker } from '@mui/x-date-pickers'
 import moment from 'moment'
@@ -171,6 +171,7 @@ const CreateLogbookForm = (props) => {
 
 const MyProgram = () => {  
   const { id } = useParams()
+  const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
@@ -185,6 +186,10 @@ const MyProgram = () => {
 
   const handleAddLogbook = () => {
     setModalOpen()
+  }
+
+  const navigateLogbookDetail = (logbookId) => {
+    navigate(`/logbooks/${id}/detail/${logbookId}`)
   }
 
   const callback = (data) => {
@@ -265,57 +270,22 @@ const MyProgram = () => {
   
             <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
               {logbooks.map((logbook) => (
-                <ListItemButton key={logbook.id}>
+                <ListItemButton
+                  onClick={() => navigateLogbookDetail(logbook.id)}
+                  key={logbook.id}>
                   <ListItemAvatar>
-                    <Avatar>{logbook.id}</Avatar>
+                    <Avatar>{moment(logbook.startsAt).date()}</Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={logbook.title}
                     secondary={logbook.description} />
                   <ListItemIcon>
                     <CheckCircle color='success' />
+                    <RemoveCircle color='disable' />
+                    <DangerousRounded color='error' />
                   </ListItemIcon>
                 </ListItemButton>
               ))}
-              <ListItemButton>
-                <ListItemAvatar>
-                  <Avatar>
-                    15
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary="Pengenalan Kegiatan"
-                  secondary="Dasar-dasar Pemrograman - Membuat aplikasi sederhana" />
-                <ListItemIcon>
-                  <CheckCircle color='success' />
-                </ListItemIcon>
-              </ListItemButton>
-              <ListItemButton>
-                <ListItemAvatar>
-                  <Avatar>
-                    14
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary="Memahami Konsep"
-                  secondary="Dasar-dasar Pemrograman - Membuat aplikasi sederhana" />
-                <ListItemIcon>
-                  <DangerousRounded color='error' />
-                </ListItemIcon>
-              </ListItemButton>
-              <ListItemButton>
-                <ListItemAvatar>
-                  <Avatar>
-                    13
-                  </Avatar>
-                </ListItemAvatar>
-                <ListItemText
-                  primary="Melihat-lihat"
-                  secondary="Data Mining - Menggali data" />
-                <ListItemIcon>
-                  <RemoveCircle color='disable' />
-                </ListItemIcon>
-              </ListItemButton>
             </List>
           </Paper>
         </Grid>
