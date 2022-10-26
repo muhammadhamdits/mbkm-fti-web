@@ -16,7 +16,7 @@ import {
 import axios from 'axios'
 import { useParams } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { formatDate, getHourMinute, getHourMinuteDiff } from '../assets/utils'
 
 const RightChat = ({ text }) => {
@@ -53,7 +53,9 @@ const LogbookDetail = () => {
   const { logbookId } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
+  const feedbackInput = useRef(null)
   const [logbook, setLogbook] = useState({})
+  const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
   
@@ -64,9 +66,26 @@ const LogbookDetail = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       )
       setLogbook(response.data.logbook)
+      setComments(response.data.logbook.comments)
       setLoaded(true)
       setLoading(false)
     }catch(e) { console.log(e) }
+  }
+
+  const handleSendFeedback = async () => {
+    if(feedbackInput.current.firstChild.value === '') return
+
+    const payload = { text: feedbackInput.current.firstChild.value }
+    try{
+      const response = await axios.post(`${baseUrl}/logbooks/${logbookId}/comments`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      const newComments = [...comments, response.data.comment]
+      setComments(newComments)
+    }catch(e) { console.log(e) }
+
+    feedbackInput.current.firstChild.value = ''
   }
 
   if(!loaded && !loading) fetchLogbook()
@@ -115,10 +134,13 @@ const LogbookDetail = () => {
             </Typography>
             <Box sx={{ maxHeight: 160, overflowY: 'scroll' }} >
               <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                <RightChat text='Ini salah tarok ini, seharusnya di CPMK Data Mining, perbaiki lagi ya' />
-                <LeftChat text="Halo pak, saya sudah menyelesaikan tugasnya" />
-                <RightChat text='Ok, terimakasih' />
-                <LeftChat text='Sama-sama Pak' />
+                { comments.map(comment => {
+                  if(comment.isLecturer){
+                    return(<RightChat key={comment.id} text={comment.text} />)
+                  }else{
+                    return(<LeftChat key={comment.id} text={comment.text} />)
+                  }
+                })}
               </List>
             </Box>
             <Paper
@@ -126,11 +148,20 @@ const LogbookDetail = () => {
               sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%' }}
             >
               <InputBase
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  handleSendFeedback()
+                }}
+                ref={feedbackInput}
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Berikan tanggapan"
                 inputProps={{ 'aria-label': 'search google maps' }}
               />
-              <IconButton color="primary" sx={{ p: '10px' }} aria-label="send">
+              <IconButton
+                onClick={handleSendFeedback}
+                color="primary"
+                sx={{ p: '10px' }}
+                aria-label="send" >
                 <Send />
               </IconButton>
             </Paper>
