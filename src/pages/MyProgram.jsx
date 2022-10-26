@@ -25,7 +25,10 @@ import {
   IconButton,
   ListItemSecondaryAction,
   Menu,
-  MenuItem
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Select
 } from '@mui/material'
 import {
   Download,
@@ -45,6 +48,27 @@ import { useParams, useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
+
+const StdSelect = (props) => {
+  return(
+    <FormControl fullWidth margin="normal" variant="standard">
+      <InputLabel>{props.label}</InputLabel>
+      <Select
+        required
+        fullWidth
+        value={props.value}
+        onChange={props.onChange} >
+        {props.items.map((item) => (
+          item.id === 'applied' ? (
+            <MenuItem key={item.id} value={item.id} disabled>{item.name}</MenuItem>
+          ) : (
+            <MenuItem key={item.id} value={item.id}>{item.name}</MenuItem>
+          )
+        ))}
+      </Select>
+    </FormControl>
+  )
+}
 
 const UploadFileDetail = (props) => {
   const { data, baseUrl, token, callback, field } = props
@@ -320,6 +344,62 @@ const BasicMenu = (props) => {
   )
 }
 
+const ConfirmStudentProgramCourse = (props) => {
+  const { data, courseIds, baseUrl, token, callback } = props
+  const [courseStatus, setCourseStatus] = useState('accepted')
+
+  const handleStatusChange = (e) => {
+    setCourseStatus(e.target.value) 
+  }
+
+  const handleUpdateStatus = async () => {
+    const payload = {
+      studentId: data.studentId,
+      courseIds: courseIds, 
+      status: courseStatus
+    }
+    try{
+      await axios.put(`${baseUrl}/student-programs/${data.programId}/courses`,
+        payload,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      callback('Berhasil mengubah status mata kuliah')
+    } catch (err) {
+      console.log(err)
+    }
+  }
+
+  const courseNames = data.program.courses.map((course) => {
+    if(courseIds.includes(course.id)){
+      return course.name
+    }
+  }).filter((course) => course !== undefined).join(', ')
+
+  return(
+    <>
+      <Typography variant="body2" color="text.secondary">
+        Apakah anda yakin ingin mengubah status konversi mata kuliah 
+        <b> {courseNames} </b> 
+        menjadi <b> {courseStatus}</b>?
+      </Typography>
+      <StdSelect
+        label="Status"
+        value={courseStatus}
+        onChange={handleStatusChange}
+        items={[
+          { id: 'accepted', name: 'Disetujui' },
+          { id: 'rejected', name: 'Ditolak' }
+        ]} />
+      <DialogActions>
+        <Button
+          onClick={handleUpdateStatus}>
+          Simpan
+        </Button>
+      </DialogActions>
+    </>
+  )
+}
+
 const MyProgram = () => {  
   const { id, studentId } = useParams()
   const user = useOutletContext()
@@ -341,16 +421,19 @@ const MyProgram = () => {
   const [isDeleting, setIsDeleting] = useState(false)
   const [lecturers, setLecturers] = useState([])
   const [lecturer, setLecturer] = useState(null)
+  const [checked, setChecked] = useState([])
+  const [isConfirming, setIsConfirming] = useState(false)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
     if(event.target.dataset?.testid === 'DeleteIcon') return
+    if(event.target.type === 'checkbox') return
     setExpanded(isExpanded ? panel : false)
   }
 
   const handleFetchData = async () => {
     let query = ``
-    if(user.role === 'admin') query = `?studentId=${studentId}`
+    if(user.role !== 'student') query = `?studentId=${studentId}`
     const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
       { headers: { Authorization: `Bearer ${token}` } }
     )
@@ -428,6 +511,22 @@ const MyProgram = () => {
     setLecturer(lecturers.find((lecturer) => lecturer.id === lecturerId))
   }
 
+  const handleConfirmCourse = async () => {
+    setIsConfirming(true)
+    setIsDeleting(false)
+    setField(null)
+    setModalOpen()
+  }
+
+  const handleCheck = (courseId) => {
+    if(checked.includes(courseId)) {
+      setChecked(checked.filter((id) => id !== courseId))
+    }else{
+      const newChecked = [...checked, courseId]
+      setChecked(newChecked)
+    }
+  }
+
   const callback = (msg, status = 'success') => {
     setAlertMessage(msg)
     setAlertStatus(status)
@@ -440,6 +539,8 @@ const MyProgram = () => {
     setOpen(false)
     setIsDeleting(false)
     setField(null)
+    setIsConfirming(false)
+    setChecked([])
   }
 
   useEffect(() => {
@@ -469,6 +570,7 @@ const MyProgram = () => {
           title={
             field ? "Upload file" : 
             isDeleting ? "Hapus mata kuliah?" : 
+            isConfirming ? "Konfirmasi konversi mata kuliah" :
             "Tambah konversi mata kuliah"
           }
           children={
@@ -482,6 +584,13 @@ const MyProgram = () => {
             : isDeleting ?
               <DeleteStudentProgramCourse
                 data={studentProgramCourse}
+                baseUrl={baseUrl}
+                token={token}
+                callback={callback} />
+            : isConfirming ?
+              <ConfirmStudentProgramCourse
+                data={studentProgram}
+                courseIds={checked}
                 baseUrl={baseUrl}
                 token={token}
                 callback={callback} />
@@ -520,13 +629,15 @@ const MyProgram = () => {
                     </Typography>
                   } />
                 <ListItemSecondaryAction>
-                  <BasicMenu
-                    token={token}
-                    baseUrl={baseUrl}
-                    callback={callback}
-                    lecturers={lecturers}
-                    studentProgram={studentProgram}
-                    setCallback={handleSetLecturer} />
+                  {user.role === 'admin' &&
+                    <BasicMenu
+                      token={token}
+                      baseUrl={baseUrl}
+                      callback={callback}
+                      lecturers={lecturers}
+                      studentProgram={studentProgram}
+                      setCallback={handleSetLecturer} />
+                  }
                 </ListItemSecondaryAction>
               </ListItem>
             </List>
@@ -551,6 +662,15 @@ const MyProgram = () => {
                       size="small" >
                       Tambah Matkul
                     </Button>
+                  }{ user.role === 'lecturer' &&
+                    <Button
+                      disabled={checked.length === 0}
+                      onClick={handleConfirmCourse}
+                      variant='contained'
+                      color='primary'
+                      size="small" >
+                      Konfirmasi Matkul
+                    </Button>
                   }
                 </Box>
               </Grid>
@@ -574,6 +694,12 @@ const MyProgram = () => {
                         sx={{ ml: -3, mr: 1, mt: -1 }} >
                           <Delete />
                       </IconButton>
+                    }{user.role === 'lecturer' &&
+                      <Checkbox
+                        checked={checked.includes(item.courseId)}
+                        onChange={handleCheck.bind(this, item.courseId)}
+                        inputProps={{ 'aria-label': 'primary checkbox' }}
+                        sx={{ ml: -3, mr: 1, mt: -1 }} />
                     }
                     <Typography sx={{ width: '33%', flexShrink: 0 }}>
                       {item.course.name}
@@ -586,12 +712,12 @@ const MyProgram = () => {
                     <Chip
                       label={
                         item.status === 'proposed' ? 'Diajukan' :
-                        item.status === 'approved' ? 'Disetujui' :
+                        item.status === 'accepted' ? 'Disetujui' :
                         'Ditolak'
                       }
                       color={
                         item.status === 'proposed' ? 'secondary' :
-                        item.status === 'approved' ? 'success' :
+                        item.status === 'accepted' ? 'success' :
                         'error'
                       }
                       size="small"
