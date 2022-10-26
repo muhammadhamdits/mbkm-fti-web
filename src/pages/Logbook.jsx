@@ -36,7 +36,7 @@ import { DateTimePicker } from '@mui/x-date-pickers'
 import moment from 'moment'
 
 const CreateLogbookForm = (props) => {
-  const { baseUrl, token, callback, courses } = props
+  const { baseUrl, token, callback, courses, programId } = props
   const [startsAt, setStartsAt] = useState(new Date())
   const [endsAt, setEndsAt] = useState(new Date())
   const [course, setCourse] = useState(null)
@@ -52,13 +52,17 @@ const CreateLogbookForm = (props) => {
     const payload = {
       title: e.target.title.value,
       description: e.target.description.value,
-      starts_at: moment(startsAt).format('YYYY-MM-DD HH:mm:ss'),
-      ends_at: moment(endsAt).format('YYYY-MM-DD HH:mm:ss'),
-      course_id: courseId,
-      cpmk_code: cpmkCode
+      startsAt: moment(startsAt).format('YYYY-MM-DD HH:mm:ss'),
+      endsAt: moment(endsAt).format('YYYY-MM-DD HH:mm:ss'),
+      courseId: courseId,
+      achievementCode: cpmkCode
     }
-    // /student-programs/:programId/logbooks
-    console.log(payload)
+
+    const response = await axios.post(`${baseUrl}/student-programs/${programId}/logbooks`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    callback(response.data.logbook)
   }
 
   return(
@@ -150,7 +154,7 @@ const CreateLogbookForm = (props) => {
             <MenuItem
               key={cpmk.achievementCode}
               value={cpmk.achievementCode}>
-              {cpmk.achievementCode} - {cpmk.achievementName}
+              {cpmk.achievementCode} - {cpmk.title}
             </MenuItem>
           ))}
         </Select>
@@ -183,8 +187,13 @@ const MyProgram = () => {
     setModalOpen()
   }
 
-  const callback = () => {
-    // Todo
+  const callback = (data) => {
+    const newLogbooks = [
+      ...logbooks,
+      data
+    ]
+    setLogbooks(newLogbooks)
+    setModalOpen()
   }
 
   const fetchLogbooks = async () => {
@@ -229,6 +238,7 @@ const MyProgram = () => {
               baseUrl={baseUrl}
               token={token}
               courses={studentProgramCourses}
+              programId={id}
               callback={callback} />
           } />
         <Grid item xs={12} md={6} lg={7}>
@@ -257,7 +267,7 @@ const MyProgram = () => {
               {logbooks.map((logbook) => (
                 <ListItemButton key={logbook.id}>
                   <ListItemAvatar>
-                    {logbook.id}
+                    <Avatar>{logbook.id}</Avatar>
                   </ListItemAvatar>
                   <ListItemText
                     primary={logbook.title}
