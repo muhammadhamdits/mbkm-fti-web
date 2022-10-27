@@ -881,19 +881,40 @@ const MyProgram = () => {
                   Dokumen Laporan Akhir
                 </Typography>
                 <Button
-                  disabled
+                  disabled={!!isLater(studentProgram.program.endsAt)}
                   variant='outlined'
                   color='primary'
                   size="small"
-                  startIcon={<Lock />}>
-                  Terkunci
+                  startIcon={
+                    !isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.completionFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    !isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.completionFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Poster
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
+                <Button
+                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    !isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.posterFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    !isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.posterFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
