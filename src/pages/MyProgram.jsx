@@ -40,11 +40,12 @@ import {
   Delete,
   Edit,
   EditOff,
-  Save
+  Save,
+  KeyboardDoubleArrowRight
 } from '@mui/icons-material'
 import { useState, useEffect, useRef } from 'react'
 import axios from 'axios'
-import { useParams, useOutletContext } from 'react-router-dom'
+import { useParams, useOutletContext, useNavigate } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
@@ -403,6 +404,7 @@ const ConfirmStudentProgramCourse = (props) => {
 const MyProgram = () => {  
   const { id, studentId } = useParams()
   const user = useOutletContext()
+  const navigate = useNavigate()
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
   const [isLoading, setIsLoading] = useState(false)
@@ -856,6 +858,19 @@ const MyProgram = () => {
                   }
                 </Button>
   
+                <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+                  Logbooks
+                </Typography>
+                <Button
+                  onClick={() => navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)}
+                  disabled={false}
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={<KeyboardDoubleArrowRight />}>
+                  Logbook
+                </Button>
+
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Laporan Akhir
                 </Typography>

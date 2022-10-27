@@ -8,7 +8,14 @@ import {
   ListItem,
   ListItemText,
   InputBase,
-  IconButton
+  IconButton,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  DialogActions,
+  Button,
+  TextField
 } from '@mui/material'
 import {
   Send
@@ -18,6 +25,7 @@ import { useParams } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import { useRef, useState } from 'react'
 import { formatDate, getHourMinute, getHourMinuteDiff } from '../assets/utils'
+import Modal from '../components/Modal'
 
 const RightChat = ({ text }) => {
   return(
@@ -49,6 +57,54 @@ const LeftChat = ({ text }) => {
   )
 }
 
+const ConfirmStudentLogbook = (props) => {<>Test</>
+  const { callback, baseUrl, token, logbookId } = props
+  const [status, setStatus] = useState('accepted')
+
+  const handleStatusChange = e => setStatus(e.target.value)
+
+  const handleUpdateStatus = async (e) => {
+    e.preventDefault()
+    const response = await axios.put(`${baseUrl}/logbooks/${logbookId}`,
+      { status: status, reason: e.target.reason.value },
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    callback(response.data.logbook)
+  }
+
+  return(
+    <form onSubmit={handleUpdateStatus}>
+      <FormControl
+        fullWidth
+        margin="normal"
+        variant="standard">
+        <InputLabel>Konfirmasi logbook mahasiswa</InputLabel>
+        <Select
+          required
+          fullWidth
+          value={status}
+          onChange={handleStatusChange} >
+          <MenuItem value='accepted'>Dietujui</MenuItem>
+          <MenuItem value='rejected'>Ditolak</MenuItem>
+        </Select>
+      </FormControl>
+      <TextField
+        required
+        fullWidth
+        margin="normal"
+        variant="standard"
+        label="Reason"
+        name="reason" />
+      <DialogActions>
+        <Button
+          type='submit' >
+          Simpan
+        </Button>
+      </DialogActions>
+    </form>
+  )
+}
+
 const LogbookDetail = () => {
   const { logbookId } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
@@ -58,7 +114,10 @@ const LogbookDetail = () => {
   const [comments, setComments] = useState([])
   const [loading, setLoading] = useState(false)
   const [loaded, setLoaded] = useState(false)
+  const [open, setOpen] = useState(false)
   
+  const setModalOpen = () => setOpen(!open)
+
   const fetchLogbook = async () => {
     setLoading(true)
     try{
@@ -88,11 +147,29 @@ const LogbookDetail = () => {
     feedbackInput.current.firstChild.value = ''
   }
 
+  const callback = (data) => {
+    setLogbook(data)
+    setModalOpen()
+  }
+
+  const handleConfirmLogbook = () => setModalOpen()
+
   if(!loaded && !loading) fetchLogbook()
 
   if(loaded && parseInt(logbook.id) === parseInt(logbookId)){
     return(
       <Grid container spacing={2}>
+        <Modal
+          open={open}
+          setOpen={setModalOpen}
+          title='Konfirmasi Logbook Mahasiswa'
+          children={ 
+            <ConfirmStudentLogbook
+              baseUrl={baseUrl}
+              token={token}
+              logbookId={logbookId}
+              callback={callback} />
+          } />
         <Grid item xs={12}>
           <Paper
             sx={{
@@ -106,13 +183,18 @@ const LogbookDetail = () => {
             </Typography>
             
             { logbook.status === 'proposed' ?
-                <Chip label="Diajukan" color="secondary" size="small" sx={{ marginTop: 2 }}/>
+                <Chip
+                  onClick={handleConfirmLogbook}
+                  label="Diajukan"
+                  color="secondary"
+                  size="small"
+                  sx={{ marginTop: 2 }}/>
               : logbook.status === 'accepted' ?
                 <Chip label="Disetujui" color="success" size="small" sx={{ marginTop: 2 }}/>
               : <Chip label="Ditolak" color="error" size="small" sx={{ marginTop: 2 }}/>
             }
             <Typography variant='caption' align="center">
-              Kegiatan tidak sesuai dengan CPMK yang dituju
+              {logbook?.reason}
             </Typography>
   
             <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
@@ -132,7 +214,7 @@ const LogbookDetail = () => {
             <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
               Feedback
             </Typography>
-            <Box sx={{ maxHeight: 160, overflowY: 'scroll' }} >
+            <Box sx={{ maxHeight: 160, overflowY: 'scroll', flexDirection: 'column-reverse', display: 'flex' }} >
               <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
                 { comments.map(comment => {
                   if(comment.isLecturer){
@@ -144,14 +226,10 @@ const LogbookDetail = () => {
               </List>
             </Box>
             <Paper
-              component="form"
               sx={{ p: '2px 4px', display: 'flex', alignItems: 'center', width: '100%' }}
             >
               <InputBase
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  handleSendFeedback()
-                }}
+                onKeyDown={e => { e.key === 'Enter' && handleSendFeedback() }}
                 ref={feedbackInput}
                 sx={{ ml: 1, flex: 1 }}
                 placeholder="Berikan tanggapan"

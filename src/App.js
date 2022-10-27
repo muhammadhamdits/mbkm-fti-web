@@ -28,6 +28,9 @@ const App = () => {
             <Route path="/logbooks/:id" element={<Logbook />}>
               <Route path="detail/:logbookId" element={<LogbookDetail />} />
             </Route>
+            <Route path="/students/:studentId/logbooks/:programId" element={<Logbook />} >
+              <Route path="detail/:logbookId" element={<LogbookDetail />} />
+            </Route>
             <Route path="/programs" element={<ProgramTable />} />
             <Route path="/courses" element={<CourseTable />} />
             <Route path="/program-types" element={<ProgramTypeTable />} />
