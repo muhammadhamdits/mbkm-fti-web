@@ -15,12 +15,14 @@ import {
   Select,
   FormControl,
   InputLabel,
-  DialogActions
+  DialogActions,
+  IconButton
 } from '@mui/material'
 import {
   CheckCircle,
   DangerousRounded,
-  RemoveCircle
+  RemoveCircle,
+  EditRounded
 } from '@mui/icons-material'
 import { useState } from 'react'
 import { DateTimePicker } from '@mui/x-date-pickers'
@@ -164,6 +166,90 @@ const CreateLogbookForm = (props) => {
   )
 }
 
+const UpdateLogbookForm = (props) => {
+  const { baseUrl, token, callback, courses, logbook } = props
+  const [course, setCourse] = useState(courses.find(course => course.courseId === logbook.courseId))
+  const [courseId, setCourseId] = useState(logbook.courseId)
+  const [cpmkCode, setCpmkCode] = useState(logbook.achievementCode)
+
+  const handleFormValueChange = (value, setter) => {
+    setter(value)
+  }
+
+  const handleSave = async (e) => {
+    e.preventDefault()
+    const payload = {
+      courseId: courseId,
+      achievementCode: cpmkCode
+    }
+
+    const response = await axios.put(`${baseUrl}/logbooks/${logbook.id}`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    callback(response.data.logbook)
+  }
+
+  return(
+    <form onSubmit={handleSave}>
+      <FormControl
+        sx={{ mt: 1, mb: 1 }}
+        fullWidth
+        margin="normal"
+        variant="standard" >
+        <InputLabel>Mata kuliah yang dituju</InputLabel>
+        <Select
+          sx={{ mt: 1, mb: 1 }}
+          required
+          fullWidth
+          value={courseId}
+          onChange={(event) => {
+            let selectedCourse = courses.find(course => course.courseId === event.target.value)
+            setCourse(selectedCourse)
+            handleFormValueChange(event.target.value, setCourseId)
+          }} >
+          <MenuItem value={-1} disabled>Pilih mata kuliah</MenuItem>
+          {courses.map((course) => (
+            <MenuItem
+              key={course.courseId}
+              value={course.courseId}>
+              {course.course.name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <FormControl
+        sx={{ mt: 1, mb: 1 }}
+        fullWidth
+        margin="normal"
+        variant="standard" >
+        <InputLabel>CPMK yang dituju</InputLabel>
+        <Select
+          sx={{ mt: 1, mb: 1 }}
+          required
+          fullWidth
+          value={cpmkCode}
+          onChange={(event) => handleFormValueChange(event.target.value, setCpmkCode)} >
+          <MenuItem value={-1} disabled>Pilih CPMK</MenuItem>
+          {course?.course?.cpmks?.map((cpmk) => (
+            <MenuItem
+              key={cpmk.achievementCode}
+              value={cpmk.achievementCode}>
+              {cpmk.achievementCode} - {cpmk.title}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
+      <DialogActions>
+        <Button
+          type='submit'>
+          Simpan
+        </Button>
+      </DialogActions>
+    </form>
+  )
+}
+
 const MyProgram = () => {  
   let query = ''
   let { id, programId, studentId } = useParams()
@@ -176,16 +262,20 @@ const MyProgram = () => {
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
+  const [logbook, setLogbook] = useState(null)
   const [studentProgramCourses, setStudentProgramCourses] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [Loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [state, setState] = useState('create')
 
   const setModalOpen = () => {
     setOpen(!open)
   }
 
-  const handleAddLogbook = () => {
+  const handleButtonClick = (action = 'create', data = {}) => {
+    if(action === 'update') setLogbook(data)
+    setState(action)
     setModalOpen()
   }
 
@@ -195,6 +285,7 @@ const MyProgram = () => {
   }
 
   const callback = (data) => {
+    if(state !== 'create') return setModalOpen()
     const newLogbooks = [
       ...logbooks,
       data
@@ -241,11 +332,18 @@ const MyProgram = () => {
           setOpen={setModalOpen}
           title={'Tambah logbook'}
           children={
+            state === 'create' ?
             <CreateLogbookForm
               baseUrl={baseUrl}
               token={token}
               courses={studentProgramCourses}
               programId={id}
+              callback={callback} /> :
+            <UpdateLogbookForm
+              baseUrl={baseUrl}
+              token={token}
+              courses={studentProgramCourses}
+              logbook={logbook}
               callback={callback} />
           } />
         <Grid item xs={12} md={6} lg={7}>
@@ -263,7 +361,7 @@ const MyProgram = () => {
             { user.role === 'student' && (
                 <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
                   <Button
-                    onClick={handleAddLogbook}
+                    onClick={() => handleButtonClick()}
                     variant='contained'
                     color='primary'
                     size='small'>
@@ -287,7 +385,16 @@ const MyProgram = () => {
                   <ListItemIcon>
                     { logbook.status === 'proposed' ? <RemoveCircle color='secondary' /> :
                       logbook.status === 'accepted' ? <CheckCircle color='success' /> :
-                      <DangerousRounded color='error' />
+                      <>
+                        <IconButton size="small">
+                          <DangerousRounded color='error' />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleButtonClick('update', logbook)}
+                          size="small">
+                          <EditRounded color='warning' />
+                        </IconButton>
+                      </>
                     }
                   </ListItemIcon>
                 </ListItemButton>
