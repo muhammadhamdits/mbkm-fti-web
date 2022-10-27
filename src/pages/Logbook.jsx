@@ -24,7 +24,7 @@ import {
 } from '@mui/icons-material'
 import { useState } from 'react'
 import { DateTimePicker } from '@mui/x-date-pickers'
-import { Outlet, useParams, useNavigate } from 'react-router-dom'
+import { Outlet, useParams, useNavigate, useOutletContext } from 'react-router-dom'
 import axios from 'axios'
 import moment from 'moment'
 import secureLocalStorage from 'react-secure-storage'
@@ -165,7 +165,13 @@ const CreateLogbookForm = (props) => {
 }
 
 const MyProgram = () => {  
-  const { id } = useParams()
+  let query = ''
+  let { id, programId, studentId } = useParams()
+  const user = useOutletContext()
+  if(user.role === 'lecturer') {
+    id = programId
+    query = `?studentId=${studentId}`
+  }
   const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
@@ -184,7 +190,8 @@ const MyProgram = () => {
   }
 
   const navigateLogbookDetail = (logbookId) => {
-    navigate(`/logbooks/${id}/detail/${logbookId}`)
+    if(user.role !== 'lecturer') navigate(`/logbooks/${id}/detail/${logbookId}`)
+    else navigate(`/students/${programId}/logbooks/${studentId}/detail/${logbookId}`)
   }
 
   const callback = (data) => {
@@ -197,14 +204,14 @@ const MyProgram = () => {
   }
 
   const fetchLogbooks = async () => {
-    const response = await axios.get(`${baseUrl}/student-programs/${id}/logbooks`, {
+    const response = await axios.get(`${baseUrl}/student-programs/${id}/logbooks${query}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     return response.data.logbooks
   }
 
   const fetchStudentProgramCourses = async () => {
-    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses`, {
+    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     const filteredCourses = response.data.studentProgramCourses.filter(
@@ -252,16 +259,19 @@ const MyProgram = () => {
             <Typography variant='h6'>
               Logbook - Backend Developer Intern
             </Typography>
-  
-            <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
-              <Button
-                onClick={handleAddLogbook}
-                variant='contained'
-                color='primary'
-                size='small'>
-                Tambah Logbook
-              </Button>
-            </Box>
+            
+            { user.role === 'student' && (
+                <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
+                  <Button
+                    onClick={handleAddLogbook}
+                    variant='contained'
+                    color='primary'
+                    size='small'>
+                    Tambah Logbook
+                  </Button>
+                </Box>
+              )
+            }
   
             <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
               {logbooks.map((logbook) => (
