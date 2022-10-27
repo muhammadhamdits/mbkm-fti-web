@@ -196,6 +196,22 @@ const LogbookDetail = () => {
             <Typography variant='caption' align="center">
               {logbook?.reason}
             </Typography>
+
+            <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+              Mata kuliah yang dituju
+            </Typography>
+            <Typography variant='body2'>
+              {logbook.course.name}
+            </Typography>
+
+            <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
+              CPMK yang dituju
+            </Typography>
+            <Typography variant='body2'>
+              {
+                logbook.course.cpmks.find(cpmk => cpmk.achievementCode === logbook.achievementCode).title
+              }
+            </Typography>
   
             <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
               Tanggal Kegiatan

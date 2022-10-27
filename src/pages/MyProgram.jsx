@@ -862,7 +862,13 @@ const MyProgram = () => {
                   Logbooks
                 </Typography>
                 <Button
-                  onClick={() => navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)}
+                  onClick={() => {
+                    if(user.role === 'student') {
+                      navigate(`/logbooks/${studentProgram.programId}`)
+                    }else{
+                      navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)
+                    }
+                  }}
                   disabled={false}
                   variant='outlined'
                   color='primary'
