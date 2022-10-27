@@ -806,7 +806,7 @@ const MyProgram = () => {
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' &&
-                  !isLater(new Date(studentProgram.program.closeAt).setDate(new Date(studentProgram.program.closeAt).getDate() + 1)) &&
+                  !isLater(studentProgram.program.endsAt) &&
                   <>
                     <Chip label="Selesai" color="primary" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
@@ -880,7 +880,12 @@ const MyProgram = () => {
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Laporan Akhir
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
+                <Button
+                  disabled
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={<Lock />}>
                   Terkunci
                 </Button>
   
