@@ -806,7 +806,7 @@ const MyProgram = () => {
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' &&
-                  !isLater(new Date(studentProgram.program.closeAt).setDate(new Date(studentProgram.program.closeAt).getDate() + 1)) &&
+                  !isLater(studentProgram.program.endsAt) &&
                   <>
                     <Chip label="Selesai" color="primary" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
@@ -880,15 +880,51 @@ const MyProgram = () => {
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Laporan Akhir
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
+                <Button
+                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  onClick={
+                    studentProgram.completionFile ?
+                    handleFileDownload.bind(this, studentProgram.completionFile) :
+                    handleUploadFile.bind(this, 'completionFile')
+                  }
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    !!isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.completionFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    !!isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.completionFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Poster
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
+                <Button
+                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  onClick={
+                    studentProgram.posterFile ?
+                    handleFileDownload.bind(this, studentProgram.posterFile) :
+                    handleUploadFile.bind(this, 'posterFile')
+                  }
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    !!isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.posterFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    !!isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.posterFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
