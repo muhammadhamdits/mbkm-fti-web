@@ -195,43 +195,52 @@ const AddStudentProgramCourse = (props) => {
     }
   }
 
-  return(
-    <>
-      <List sx={{ width: '100%' }}>
-        {programCourses.map((course) => (
-          <ListItem
-            disablePadding
-            secondaryAction={
-              <Chip
-                color="primary"
-                size="small"
-                label={`${course.sks} SKS`} />
-            }
-            key={course.id}>
-            <ListItemButton
-              onClick={handleCheckCourse.bind(this, course.id)}
-              sx={{ mr: 8 }}
-              dense>
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={checked.includes(course.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemText primary={course.name} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <DialogActions>
-        <Button onClick={handleSave}>
-          Simpan
-        </Button>
-      </DialogActions>
-    </>
-  )
+  if(programCourses.length === 0){
+    return (
+      <Typography variant="subtitle1" sx={{ fontWeight: 400 }}>
+        Tidak ada mata kuliah yang tersedia untuk dikonversi.
+        Silahkan hubungi admin untuk menambahkan mata kuliah.
+      </Typography>
+    )
+  }else{
+    return(
+      <>
+        <List sx={{ width: '100%' }}>
+          {programCourses.map((course) => (
+            <ListItem
+              disablePadding
+              secondaryAction={
+                <Chip
+                  color="primary"
+                  size="small"
+                  label={`${course.sks} SKS`} />
+              }
+              key={course.id}>
+              <ListItemButton
+                onClick={handleCheckCourse.bind(this, course.id)}
+                sx={{ mr: 8 }}
+                dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={checked.includes(course.id)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText primary={course.name} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <DialogActions>
+          <Button onClick={handleSave}>
+            Simpan
+          </Button>
+        </DialogActions>
+      </>
+    )
+  }
 }
 
 const DeleteStudentProgramCourse = (props) => {
