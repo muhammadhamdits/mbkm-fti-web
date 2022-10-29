@@ -235,12 +235,23 @@ const Program = () => {
                     variant='contained'
                     size="large"
                     onClick={setModalOpen}
-                    disabled={ !isInRange(new Date(), program.openAt, program.closeAt) || isRegistered } >
-                    Daftar Pada Program Ini
+                    disabled={ 
+                      !isInRange(new Date(), program.openAt, program.closeAt) || 
+                      isRegistered || program.status !== 'approved'
+                    } >
+                    { program.status === 'approved' ?
+                      'Daftar Pada Program Ini' :
+                      'Terkunci'
+                    }
                   </Button>
                   <Typography variant='body2' sx={{ marginTop: 2, alignSelf: 'center' }}>
-                    { isLater(program.openAt) ?
-                      `Pendaftaran akan dibuka pada ${formatDate(program.openAt)}` :
+                    { 
+                      program.status === 'proposed' ?
+                        'Program ini masih berupa usulan. Silahkan tunggu konfirmasi dari admin.' :
+                      program.status === 'rejected' ?
+                        'Program ini ditolak oleh admin. Silahkan hubungi admin untuk informasi lebih lanjut.' :
+                      isLater(program.openAt) ?
+                        `Pendaftaran akan dibuka pada ${formatDate(program.openAt)}` :
                       isInRange(new Date(), program.openAt, program.closeAt) ?
                         `Pendaftaran ditutup pada ${formatDate(program.closeAt)}` :
                       `Pendaftaran telah ditutup pada ${formatDate(program.closeAt)}`
