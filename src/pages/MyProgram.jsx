@@ -690,7 +690,10 @@ const MyProgram = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   {user.role === 'student' &&
                     <Button
-                      disabled={totalSks === studentProgram.program.sksCount}
+                      disabled={
+                        (totalSks === studentProgram.program.sksCount) ||
+                        (studentProgram.status === 'rejected')
+                      }
                       onClick={handleAddStudentProgramCourse}
                       variant='contained'
                       color='primary'
