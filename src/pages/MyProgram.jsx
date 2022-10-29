@@ -975,7 +975,10 @@ const MyProgram = () => {
                   Dokumen Laporan Akhir
                 </Typography>
                 <Button
-                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
                   onClick={
                     studentProgram.completionFile ?
                     handleFileDownload.bind(this, studentProgram.completionFile) :
@@ -985,11 +988,13 @@ const MyProgram = () => {
                   color='primary'
                   size="small"
                   startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     <Lock /> : !studentProgram.completionFile ?
                     <Upload /> : <Download />
                   }>
                   {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     'Terkunci' : !studentProgram.completionFile ?
                     'Unggah' : 'Unduh'
@@ -1000,7 +1005,10 @@ const MyProgram = () => {
                   Dokumen Poster
                 </Typography>
                 <Button
-                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
                   onClick={
                     studentProgram.posterFile ?
                     handleFileDownload.bind(this, studentProgram.posterFile) :
@@ -1010,11 +1018,13 @@ const MyProgram = () => {
                   color='primary'
                   size="small"
                   startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     <Lock /> : !studentProgram.posterFile ?
                     <Upload /> : <Download />
                   }>
                   {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     'Terkunci' : !studentProgram.posterFile ?
                     'Unggah' : 'Unduh'
