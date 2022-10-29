@@ -735,11 +735,13 @@ const MyProgram = () => {
                   > 
                     {user.role === 'student' &&
                       <IconButton
+                        disabled={item.status === 'accepted'}
                         size="small"
                         color="error"
                         onClick={handleDeleteStudentProgramCourse.bind(this, item)}
                         sx={{ ml: -3, mr: 1, mt: -1 }} >
-                          <Delete />
+                          <Delete
+                            visibility={item.status === 'accepted' ? 'hidden' : 'visible'} />
                       </IconButton>
                     }{user.role === 'lecturer' &&
                       <Checkbox
