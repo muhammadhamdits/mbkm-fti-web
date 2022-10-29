@@ -24,8 +24,9 @@ import axios from 'axios'
 import { useParams } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import { useRef, useState } from 'react'
-import { formatDate, getHourMinute, getHourMinuteDiff } from '../assets/utils'
+import { formatDate, getHourMinute } from '../assets/utils'
 import Modal from '../components/Modal'
+import moment from 'moment'
 
 const RightChat = ({ text }) => {
   return(
@@ -147,6 +148,15 @@ const LogbookDetail = () => {
     feedbackInput.current.firstChild.value = ''
   }
 
+  const getHourDiff = () => {
+    const start = moment(logbook.startsAt)
+    const end = moment(logbook.endsAt)
+    const diff = moment.duration(end.diff(start)).asHours().toFixed(2)
+    return(
+      <b>{` (${diff} jam)`}</b>
+    )
+  }
+
   const callback = (data) => {
     setLogbook(data)
     setModalOpen()
@@ -224,7 +234,9 @@ const LogbookDetail = () => {
               Jam Kegiatan
             </Typography>
             <Typography variant='body2'>
-              {getHourMinute(logbook.startsAt)} - {getHourMinute(logbook.endsAt)} ({getHourMinuteDiff(logbook.startsAt, logbook.endsAt)})
+              {getHourMinute(logbook.startsAt)} - {getHourMinute(logbook.endsAt)} {
+                getHourDiff()
+              }
             </Typography>
   
             <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
