@@ -50,6 +50,7 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
+import moment from 'moment'
 
 const StdSelect = (props) => {
   return(
@@ -779,11 +780,11 @@ const MyProgram = () => {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant='body2'>
-                      Total jam konversi: <b>24 jam 17 menit</b> dari <b>48 jam</b>
+                      Total jam konversi: <b>{moment.duration(item.progress).asHours().toFixed(2)} jam</b> dari <b>{moment.duration(item.timeNeeded).asHours().toFixed(2)} jam</b>
                     </Typography>
                     <LinearProgress 
                       variant="determinate" 
-                      value={ ((24/48)+((17/60)/48))*100 } 
+                      value={ (item.progress/item.timeNeeded)*100 } 
                       sx={{ width: '100%', marginTop: 1 }} />
                       
                     <Grid container spacing={2} sx={{ marginTop: 1 }}>
