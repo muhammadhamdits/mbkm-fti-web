@@ -963,7 +963,9 @@ const MyProgram = () => {
                       navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)
                     }
                   }}
-                  disabled={false}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status)
+                  }
                   variant='outlined'
                   color='primary'
                   size="small"
