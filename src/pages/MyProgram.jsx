@@ -882,7 +882,7 @@ const MyProgram = () => {
                   <>
                     <Chip label="Ditolak" color="error" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
-                      Mohon maaf permohonan pendaftaran anda ditolak. Silakan hubungi jurusan untuk informasi lebih lanjut.
+                      {studentProgram.reason}
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' && isLater(studentProgram.program.startsAt) &&
