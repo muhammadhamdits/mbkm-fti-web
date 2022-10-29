@@ -28,7 +28,8 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  TextField
 } from '@mui/material'
 import {
   Download,
@@ -425,6 +426,7 @@ const MyProgram = () => {
   const [lecturer, setLecturer] = useState(null)
   const [checked, setChecked] = useState([])
   const [isConfirming, setIsConfirming] = useState(false)
+  const [isInputScore, setIsInputScore] = useState(false)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
@@ -452,7 +454,9 @@ const MyProgram = () => {
   }
 
   const handleFetchStudentProgramCourses = async () => {
-    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses`, {
+    let query = ``
+    if(user.role !== 'student') query = `?studentId=${studentId}`
+    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
       headers: { Authorization: `Bearer ${token}` }
     })
     setStudentProgramCourses(response.data.studentProgramCourses)
@@ -528,6 +532,34 @@ const MyProgram = () => {
       const newChecked = [...checked, courseId]
       setChecked(newChecked)
     }
+  }
+
+  const handleScoreSubmit = async (e) => {
+    e.preventDefault()
+    let data = JSON.parse(e.target.data.value)
+    let achievementCodes = []
+    let scores = []
+    data.course.cpmks.forEach(cpmk => {
+      achievementCodes.push(cpmk.achievementCode)
+      scores.push(e.target[cpmk.achievementCode].value)
+    })
+    const payload = {
+      studentId: data.studentId,
+      programId: data.programId,
+      courseId: data.courseId,
+      achievementCodes: achievementCodes,
+      scores: scores
+    }
+
+    await axios.put(`${baseUrl}/student-programs/${data.programId}/course-achievements/${data.courseId}`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    await handleFetchStudentProgramCourses()
+    setAlertMessage('Berhasil menginput nilai')
+    setAlertStatus('success')
+    setShowAlert(true)
+    setIsInputScore(false)
   }
 
   const callback = (msg, status = 'success') => {
@@ -725,6 +757,11 @@ const MyProgram = () => {
                       }
                       size="small"
                       sx={{ marginLeft: 1 }}/>
+                    <Chip
+                      label={`Nilai : ${item.score || '-'}`}
+                      color="info"
+                      size="small"
+                      sx={{ marginLeft: 1 }}/>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant='body2'>
@@ -734,22 +771,76 @@ const MyProgram = () => {
                       variant="determinate" 
                       value={ ((24/48)+((17/60)/48))*100 } 
                       sx={{ width: '100%', marginTop: 1 }} />
-                    <Typography variant='body1' sx={{ marginTop: 3 }}>
-                      Daftar CPMK:
-                    </Typography>
+                      
+                    <Grid container spacing={2} sx={{ marginTop: 1 }}>
+                      <Grid item xs={6}>
+                        <Typography variant='body1'>
+                          Daftar CPMK:
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button
+                            onClick={
+                              () => {
+                                let action = user.role === 'lecturer' ?
+                                setIsInputScore(item.courseId) :
+                                null
+                                return action
+                              }
+                            }>
+                            Nilai
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                      
                     <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                      {item.course?.cpmks?.map((cpmk, index) => (
-                        <ListItem sx={{ padding: 0}} key={cpmk.achievementCode}>
-                          <ListItemIcon>
-                            <ArrowRight sx={{ padding: 0 }} />
-                          </ListItemIcon>
-                          <ListItemText>
-                            <Typography variant='overline'>
-                              {cpmk.achievementCode} - {cpmk.title}
-                            </Typography>
-                          </ListItemText>
-                        </ListItem>
-                      ))}
+                      <form onSubmit={handleScoreSubmit}>
+                        {item.course?.cpmks?.map((cpmk, index) => (
+                          <ListItem
+                            sx={{ padding: 0}}
+                            key={cpmk.achievementCode}>
+                            <ListItemIcon>
+                              <ArrowRight sx={{ padding: 0 }} />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${cpmk.achievementCode} - ${cpmk.cpmk.title}`}
+                              secondary={`Bobot penilaian: ${cpmk.cpmk.weight}`} >
+                            </ListItemText>
+                            <ListItemText sx={{ textAlign: 'right' }}>
+                              { (isInputScore === item.courseId && user.role === 'lecturer') &&
+                                <TextField
+                                  name={cpmk.achievementCode}
+                                  autoComplete='off'
+                                  sx={{ width: '52px', paddingRight: 1 }}
+                                  variant='standard'
+                                  size='small'
+                                  defaultValue={cpmk.score}
+                                  type='number' />
+                              }
+                              { isInputScore !== item.courseId &&
+                                <Typography variant='overline'>
+                                  { cpmk.score || '-' }
+                                </Typography>
+                              }
+                            </ListItemText>
+                          </ListItem>
+                        ))}
+                        { isInputScore === item.courseId &&
+                          <Box sx={{
+                            display: 'flex',
+                            marginTop: 2,
+                            marginBottom: 0,
+                            justifyContent: 'flex-end' }}>
+                            <Button onClick={() => setIsInputScore(null) }>Batal</Button>
+                            <Button
+                              value={JSON.stringify(item)}
+                              name='data'
+                              type='submit'>Simpan</Button>
+                          </Box>
+                        }
+                      </form>
                     </List>
                   </AccordionDetails>
                 </Accordion>
