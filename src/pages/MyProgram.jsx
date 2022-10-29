@@ -50,6 +50,7 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
+import moment from 'moment'
 
 const StdSelect = (props) => {
   return(
@@ -195,43 +196,52 @@ const AddStudentProgramCourse = (props) => {
     }
   }
 
-  return(
-    <>
-      <List sx={{ width: '100%' }}>
-        {programCourses.map((course) => (
-          <ListItem
-            disablePadding
-            secondaryAction={
-              <Chip
-                color="primary"
-                size="small"
-                label={`${course.sks} SKS`} />
-            }
-            key={course.id}>
-            <ListItemButton
-              onClick={handleCheckCourse.bind(this, course.id)}
-              sx={{ mr: 8 }}
-              dense>
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={checked.includes(course.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemText primary={course.name} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <DialogActions>
-        <Button onClick={handleSave}>
-          Simpan
-        </Button>
-      </DialogActions>
-    </>
-  )
+  if(programCourses.length === 0){
+    return (
+      <Typography variant="subtitle1" sx={{ fontWeight: 400 }}>
+        Tidak ada mata kuliah yang tersedia untuk dikonversi.
+        Silahkan hubungi admin untuk menambahkan mata kuliah.
+      </Typography>
+    )
+  }else{
+    return(
+      <>
+        <List sx={{ width: '100%' }}>
+          {programCourses.map((course) => (
+            <ListItem
+              disablePadding
+              secondaryAction={
+                <Chip
+                  color="primary"
+                  size="small"
+                  label={`${course.sks} SKS`} />
+              }
+              key={course.id}>
+              <ListItemButton
+                onClick={handleCheckCourse.bind(this, course.id)}
+                sx={{ mr: 8 }}
+                dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={checked.includes(course.id)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText primary={course.name} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <DialogActions>
+          <Button onClick={handleSave}>
+            Simpan
+          </Button>
+        </DialogActions>
+      </>
+    )
+  }
 }
 
 const DeleteStudentProgramCourse = (props) => {
@@ -690,7 +700,10 @@ const MyProgram = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   {user.role === 'student' &&
                     <Button
-                      disabled={totalSks === studentProgram.program.sksCount}
+                      disabled={
+                        (totalSks === studentProgram.program.sksCount) ||
+                        (studentProgram.status === 'rejected')
+                      }
                       onClick={handleAddStudentProgramCourse}
                       variant='contained'
                       color='primary'
@@ -723,11 +736,13 @@ const MyProgram = () => {
                   > 
                     {user.role === 'student' &&
                       <IconButton
+                        disabled={item.status === 'accepted'}
                         size="small"
                         color="error"
                         onClick={handleDeleteStudentProgramCourse.bind(this, item)}
                         sx={{ ml: -3, mr: 1, mt: -1 }} >
-                          <Delete />
+                          <Delete
+                            visibility={item.status === 'accepted' ? 'hidden' : 'visible'} />
                       </IconButton>
                     }{user.role === 'lecturer' &&
                       <Checkbox
@@ -765,11 +780,11 @@ const MyProgram = () => {
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant='body2'>
-                      Total jam konversi: <b>24 jam 17 menit</b> dari <b>48 jam</b>
+                      Total jam konversi: <b>{moment.duration(item.progress).asHours().toFixed(2)} jam</b> dari <b>{moment.duration(item.timeNeeded).asHours().toFixed(2)} jam</b>
                     </Typography>
                     <LinearProgress 
                       variant="determinate" 
-                      value={ ((24/48)+((17/60)/48))*100 } 
+                      value={ (item.progress/item.timeNeeded)*100 } 
                       sx={{ width: '100%', marginTop: 1 }} />
                       
                     <Grid container spacing={2} sx={{ marginTop: 1 }}>
@@ -879,7 +894,7 @@ const MyProgram = () => {
                   <>
                     <Chip label="Ditolak" color="error" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
-                      Mohon maaf permohonan pendaftaran anda ditolak. Silakan hubungi jurusan untuk informasi lebih lanjut.
+                      {studentProgram.reason}
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' && isLater(studentProgram.program.startsAt) &&
@@ -960,7 +975,9 @@ const MyProgram = () => {
                       navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)
                     }
                   }}
-                  disabled={false}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status)
+                  }
                   variant='outlined'
                   color='primary'
                   size="small"
@@ -972,7 +989,10 @@ const MyProgram = () => {
                   Dokumen Laporan Akhir
                 </Typography>
                 <Button
-                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
                   onClick={
                     studentProgram.completionFile ?
                     handleFileDownload.bind(this, studentProgram.completionFile) :
@@ -982,11 +1002,13 @@ const MyProgram = () => {
                   color='primary'
                   size="small"
                   startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     <Lock /> : !studentProgram.completionFile ?
                     <Upload /> : <Download />
                   }>
                   {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     'Terkunci' : !studentProgram.completionFile ?
                     'Unggah' : 'Unduh'
@@ -997,7 +1019,10 @@ const MyProgram = () => {
                   Dokumen Poster
                 </Typography>
                 <Button
-                  disabled={!!isLater(studentProgram.program.endsAt)}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
                   onClick={
                     studentProgram.posterFile ?
                     handleFileDownload.bind(this, studentProgram.posterFile) :
@@ -1007,11 +1032,13 @@ const MyProgram = () => {
                   color='primary'
                   size="small"
                   startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     <Lock /> : !studentProgram.posterFile ?
                     <Upload /> : <Download />
                   }>
                   {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
                     !!isLater(studentProgram.program.endsAt) ?
                     'Terkunci' : !studentProgram.posterFile ?
                     'Unggah' : 'Unduh'
