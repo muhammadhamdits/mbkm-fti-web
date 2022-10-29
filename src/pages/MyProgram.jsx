@@ -1017,13 +1017,6 @@ const MyProgram = () => {
                     'Unggah' : 'Unduh'
                   }
                 </Button>
-  
-                <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
-                  Rekap Nilai
-                </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
-                </Button>
               </Paper>
             </Grid>
           </Grid>
