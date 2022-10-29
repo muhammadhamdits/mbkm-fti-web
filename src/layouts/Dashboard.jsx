@@ -85,6 +85,7 @@ const DashboardLayout = () => {
       await axios.put(`${baseUrl}/notifications/${path.id}`, {}, {
         headers: { Authorization: `Bearer ${token}` }
       })
+      await fetchNotifications()
       navigate(path.path)
     }
   }
