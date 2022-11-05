@@ -253,14 +253,10 @@ const UpdateLogbookForm = (props) => {
 }
 
 const LogbookPage = () => {  
+  const navigate = useNavigate()
   let query = ''
   let { id, programId, studentId } = useParams()
   const user = useOutletContext()
-  if(user.role === 'lecturer') {
-    id = programId
-    query = `?studentId=${studentId}`
-  }
-  const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
@@ -272,6 +268,11 @@ const LogbookPage = () => {
   const [open, setOpen] = useState(false)
   const [is404, setIs404] = useState(false)
   const [state, setState] = useState('create')
+  
+  if(user.role === 'lecturer') {
+    id = programId
+    query = `?studentId=${studentId}`
+  }
 
   const setModalOpen = () => {
     setOpen(!open)
@@ -341,7 +342,7 @@ const LogbookPage = () => {
     })
   }
 
-  if(is404) return <NotFoundPage />
+  if(is404 || (user.role !== 'lecturer' && studentId)) return <NotFoundPage />
   else if(loaded){
     return (
       <Grid container spacing={2}>

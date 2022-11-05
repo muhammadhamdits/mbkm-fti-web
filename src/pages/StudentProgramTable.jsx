@@ -27,6 +27,7 @@ import { Link, useOutletContext } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import axios from 'axios'
 import Modal from '../components/Modal'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -223,7 +224,8 @@ const ProgramTable = () => {
     if(!isLoaded) fetchStudentPrograms()
   })
 
-  if(isLoading) {
+  if(user?.role === 'student') return <NotFoundPage />
+  else if(isLoading) {
     return (
       <>Loading</>
     )
