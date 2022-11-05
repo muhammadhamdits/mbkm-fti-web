@@ -31,6 +31,7 @@ import axios from 'axios'
 import moment from 'moment'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
+import { isInRange } from '../assets/utils'
 
 const CreateLogbookForm = (props) => {
   const { baseUrl, token, callback, courses, programId } = props
@@ -250,7 +251,7 @@ const UpdateLogbookForm = (props) => {
   )
 }
 
-const MyProgram = () => {  
+const LogbookPage = () => {  
   let query = ''
   let { id, programId, studentId } = useParams()
   const user = useOutletContext()
@@ -263,6 +264,7 @@ const MyProgram = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
   const [logbook, setLogbook] = useState(null)
+  const [program, setProgram] = useState(null)
   const [studentProgramCourses, setStudentProgramCourses] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [Loading, setLoading] = useState(false)
@@ -301,6 +303,13 @@ const MyProgram = () => {
     return response.data.logbooks
   }
 
+  const fetchProgram = async () => {
+    const response = await axios.get(`${baseUrl}/programs/${id}`, {
+      headers: { Authorization: `Bearer ${token}` }
+    })
+    return response.data.program
+  }
+
   const fetchStudentProgramCourses = async () => {
     const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -313,6 +322,7 @@ const MyProgram = () => {
 
   const fetchData = async () => {
     setLogbooks(await fetchLogbooks())
+    setProgram(await fetchProgram())
     setStudentProgramCourses(await fetchStudentProgramCourses())
   }
   
@@ -355,13 +365,14 @@ const MyProgram = () => {
             }}
           >
             <Typography variant='h6'>
-              Logbook - Backend Developer Intern
+              Logbook - {program.name}
             </Typography>
             
             { user.role === 'student' && (
                 <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
                   <Button
                     onClick={() => handleButtonClick()}
+                    disabled={!isInRange(new Date(), program.startsAt, program.endsAt)}
                     variant='contained'
                     color='primary'
                     size='small'>
@@ -410,4 +421,4 @@ const MyProgram = () => {
   }else return <>Loading</>
 }
 
-export default MyProgram
+export default LogbookPage
