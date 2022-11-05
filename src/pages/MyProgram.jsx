@@ -29,7 +29,8 @@ import {
   FormControl,
   InputLabel,
   Select,
-  TextField
+  TextField,
+  Link
 } from '@mui/material'
 import {
   Download,
@@ -655,7 +656,13 @@ const MyProgram = () => {
             }}
           >
             <Typography variant='h6'>
-              Program Saya - { studentProgram.program.name }
+              Program Saya - <Link
+              href='#'
+              underline='none'
+              onClick={(e) => {
+                e.preventDefault()
+                navigate(`/programs/${id}`)
+              }}>{ studentProgram.program.name }</Link>
             </Typography>
   
             <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
@@ -702,7 +709,9 @@ const MyProgram = () => {
                     <Button
                       disabled={
                         (totalSks === studentProgram.program.sksCount) ||
-                        (studentProgram.status === 'rejected')
+                        (studentProgram.status === 'rejected') ||
+                        (studentProgram.status === 'accepted' &&
+                        !isLater(studentProgram.program.endsAt))
                       }
                       onClick={handleAddStudentProgramCourse}
                       variant='contained'
