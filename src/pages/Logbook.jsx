@@ -31,6 +31,7 @@ import axios from 'axios'
 import moment from 'moment'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
+import NotFoundPage from './404'
 import { isInRange } from '../assets/utils'
 
 const CreateLogbookForm = (props) => {
@@ -264,11 +265,12 @@ const LogbookPage = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
   const [logbook, setLogbook] = useState(null)
-  const [program, setProgram] = useState(null)
+  const [studentProgram, setStudentProgram] = useState(null)
   const [studentProgramCourses, setStudentProgramCourses] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [Loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [is404, setIs404] = useState(false)
   const [state, setState] = useState('create')
 
   const setModalOpen = () => {
@@ -303,11 +305,16 @@ const LogbookPage = () => {
     return response.data.logbooks
   }
 
-  const fetchProgram = async () => {
-    const response = await axios.get(`${baseUrl}/programs/${id}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    return response.data.program
+  const fetchStudentProgram = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if(response.data.studentProgram?.status === 'accepted') return response.data.studentProgram
+      else setIs404(true)
+    } catch (error) {
+      setIs404(true)
+    }
   }
 
   const fetchStudentProgramCourses = async () => {
@@ -322,7 +329,7 @@ const LogbookPage = () => {
 
   const fetchData = async () => {
     setLogbooks(await fetchLogbooks())
-    setProgram(await fetchProgram())
+    setStudentProgram(await fetchStudentProgram())
     setStudentProgramCourses(await fetchStudentProgramCourses())
   }
   
@@ -334,7 +341,8 @@ const LogbookPage = () => {
     })
   }
 
-  if(loaded){
+  if(is404) return <NotFoundPage />
+  else if(loaded){
     return (
       <Grid container spacing={2}>
         <Modal
@@ -365,14 +373,18 @@ const LogbookPage = () => {
             }}
           >
             <Typography variant='h6'>
-              Logbook - {program.name}
+              Logbook - {studentProgram.program.name}
             </Typography>
             
             { user.role === 'student' && (
                 <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
                   <Button
                     onClick={() => handleButtonClick()}
-                    disabled={!isInRange(new Date(), program.startsAt, program.endsAt)}
+                    disabled={!isInRange(
+                      new Date(),
+                      studentProgram.program.startsAt,
+                      studentProgram.program.endsAt
+                    )}
                     variant='contained'
                     color='primary'
                     size='small'>
