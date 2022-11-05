@@ -52,6 +52,7 @@ import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
 import moment from 'moment'
+import NotFoundPage from './404'
 
 const StdSelect = (props) => {
   return(
@@ -438,6 +439,8 @@ const MyProgram = () => {
   const [checked, setChecked] = useState([])
   const [isConfirming, setIsConfirming] = useState(false)
   const [isInputScore, setIsInputScore] = useState(false)
+  const [is404, setIs404] = useState(false)
+  const [currentId, setCurrentId] = useState(null)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
@@ -447,14 +450,18 @@ const MyProgram = () => {
   }
 
   const handleFetchData = async () => {
-    let query = ``
-    if(user.role !== 'student') query = `?studentId=${studentId}`
-    else query = `?studentId=${user.id}`
-    const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    setStudentProgram(response.data.studentProgram)
-    setLecturer(response.data.studentProgram.lecturer)
+    try {
+      let query = ``
+      if(user.role !== 'student') query = `?studentId=${studentId}`
+      else query = `?studentId=${user.id}`
+      const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setStudentProgram(response.data.studentProgram)
+      setLecturer(response.data.studentProgram.lecturer)
+    } catch (err) {
+      setIs404(true)
+    }
   }
 
   const handleFetchLecturers = async () => {
@@ -465,13 +472,17 @@ const MyProgram = () => {
   }
 
   const handleFetchStudentProgramCourses = async () => {
-    let query = ``
-    if(user.role !== 'student') query = `?studentId=${studentId}`
-    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    setStudentProgramCourses(response.data.studentProgramCourses)
-    setTotalSks(response.data.totalSks)
+    try {
+      let query = ``
+      if(user.role !== 'student') query = `?studentId=${studentId}`
+      const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setStudentProgramCourses(response.data.studentProgramCourses)
+      setTotalSks(response.data.totalSks)
+    } catch (err) {
+      setIs404(true)
+    }
   }
 
   const handleSetNotAddedCourses = (allData, addedData) => {
@@ -484,6 +495,8 @@ const MyProgram = () => {
   }
 
   const fetchStudentProgram = async () => {
+    setCurrentId(id)
+    setIs404(false)
     setIsLoading(true)
     setIsLoaded(false)
     try {
@@ -491,7 +504,7 @@ const MyProgram = () => {
       await handleFetchStudentProgramCourses()
       await handleFetchLecturers()
     } catch (e) {
-      console.log(e)
+      setIs404(true)
     }
     setIsLoading(false)
     setIsLoaded(true)
@@ -591,11 +604,16 @@ const MyProgram = () => {
 
   useEffect(() => {
     if (!isLoaded && !isLoading) fetchStudentProgram()
-    else if (isLoaded && parseInt(studentProgram.programId) !== parseInt(id))
+    else if (
+      isLoaded &&
+      !is404 &&
+      parseInt(studentProgram?.programId) !== parseInt(id))
       fetchStudentProgram()
+    else if (is404 && currentId !== id) fetchStudentProgram()
   })
 
-  if (isLoading) {
+  if (is404) return <NotFoundPage />
+  else if (isLoading) {
     return (
       <>Loading</>
     )
