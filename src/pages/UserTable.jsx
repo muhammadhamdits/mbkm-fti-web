@@ -1,28 +1,23 @@
-import * as React from 'react'
-import PropTypes from 'prop-types'
-import { alpha } from '@mui/material/styles'
-import Box from '@mui/material/Box'
-import Table from '@mui/material/Table'
-import TableBody from '@mui/material/TableBody'
-import TableCell from '@mui/material/TableCell'
-import TableContainer from '@mui/material/TableContainer'
-import TableHead from '@mui/material/TableHead'
-import TablePagination from '@mui/material/TablePagination'
-import TableRow from '@mui/material/TableRow'
-import TableSortLabel from '@mui/material/TableSortLabel'
-import Toolbar from '@mui/material/Toolbar'
-import Typography from '@mui/material/Typography'
-import Paper from '@mui/material/Paper'
-import Checkbox from '@mui/material/Checkbox'
-import IconButton from '@mui/material/IconButton'
-import Tooltip from '@mui/material/Tooltip'
-import FormControlLabel from '@mui/material/FormControlLabel'
-import Switch from '@mui/material/Switch'
-import DeleteIcon from '@mui/icons-material/Delete'
-import FilterListIcon from '@mui/icons-material/FilterList'
-import { visuallyHidden } from '@mui/utils'
-import { Add, AddOutlined, Delete, DeleteOutline, Edit, EditOutlined, RemoveRedEye, Sync } from '@mui/icons-material'
-import { Button, Chip } from '@mui/material'
+import { useState }from 'react'
+import {
+  Box,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Toolbar,
+  Typography,
+  Paper,
+  IconButton,
+  Tooltip
+} from '@mui/material'
+import { Sync } from '@mui/icons-material'
+import { useOutletContext } from 'react-router-dom'
+import secureLocalStorage from 'react-secure-storage'
+import axios from 'axios'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -39,9 +34,6 @@ const EnhancedTableHead = () => {
         </TableCell>
         <TableCell >
           Role
-        </TableCell>
-        <TableCell >
-          Action
         </TableCell>
       </TableRow>
     </TableHead>
@@ -76,43 +68,58 @@ const EnhancedTableToolbar = () => {
   )
 }
 
-const ProgramTable = () => {
-  return (
-    <Box sx={{ width: '100%' }}>
-      <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
-        <EnhancedTableToolbar />
-        <TableContainer>
-          <Table
-            sx={{ minWidth: 750 }}
-            aria-labelledby="tableTitle"
-            size="small"
-          >
-            <EnhancedTableHead />
-            <TableBody>
-              <TableRow hover >
-                <TableCell>1</TableCell>
-                <TableCell>Husnil Kamil</TableCell>
-                <TableCell>
-                  199607302010121001
-                </TableCell>
-                <TableCell>
-                  Lecturer
-                </TableCell>
-                <TableCell sx={{ width: '120px' }}>
-                  <IconButton color='warning'>
-                    <Edit />
-                  </IconButton>
-                  <IconButton color='error'>
-                    <Delete />
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            </TableBody>
-          </Table>
-        </TableContainer>
-      </Paper>
-    </Box>
-  )
+const UsersTable = () => {
+  const user = useOutletContext()
+  const token = secureLocalStorage.getItem('token')
+  const baseUrl = process.env.REACT_APP_API_URL
+  const [users, setUsers] = useState(null)
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUsers(response.data.users)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  if(users === null) fetchUsers()
+
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else{
+    return (
+      <Box sx={{ width: '100%' }}>
+        <Paper sx={{ width: '100%', mb: 2, paddingX: 2, paddingY: 1 }}>
+          <EnhancedTableToolbar />
+          <TableContainer>
+            <Table
+              sx={{ minWidth: 750 }}
+              aria-labelledby="tableTitle"
+              size="small"
+            >
+              <EnhancedTableHead />
+              <TableBody>
+                {users?.map((user, index) => (
+                  <TableRow hover key={user.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>
+                      {user.username}
+                    </TableCell>
+                    <TableCell>
+                      {user.role}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Paper>
+      </Box>
+    )
+  }
 }
 
-export default ProgramTable
+export default UsersTable

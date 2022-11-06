@@ -12,11 +12,13 @@ import Paper from '@mui/material/Paper'
 import IconButton from '@mui/material/IconButton'
 import Tooltip from '@mui/material/Tooltip'
 import { Add, Delete, Edit } from '@mui/icons-material'
-import Modal from '../components/Modal'
 import secureLocalStorage from 'react-secure-storage'
+import { useOutletContext } from 'react-router-dom'
+import Modal from '../components/Modal'
 import axios from 'axios'
 import { Button, DialogActions, Grid, TextField } from '@mui/material'
 import { capitalize } from '../assets/utils'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -155,6 +157,7 @@ const ProgramTypeForm = (props) => {
 }
 
 const ProgramTypeTable = () => {
+  const user = useOutletContext()
   const token = secureLocalStorage.getItem('token')
   const baseURL = process.env.REACT_APP_API_URL
   const [open, setOpen] = React.useState(false)
@@ -208,7 +211,8 @@ const ProgramTypeTable = () => {
     if(!isLoading && programTypes.length === 0) getProgramTypes()
   })
 
-  if(isLoading) return <div>Loading...</div>
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else if(isLoading) return <div>Loading...</div>
   else if(programTypes.length){
     return (
       <Box sx={{ width: '100%' }}>

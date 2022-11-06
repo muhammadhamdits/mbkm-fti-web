@@ -11,7 +11,8 @@ import {
   IconButton,
   Badge,
   MenuItem,
-  Menu
+  Menu,
+  Grid
 } from '@mui/material'
 import MenuIcon from '@mui/icons-material/Menu'
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft'
@@ -25,20 +26,16 @@ import { Outlet } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import { formatDate } from '../assets/utils'
 
 const mdTheme = createTheme()
 
 const BasicMenu = (props) => {
   const [anchorEl, setAnchorEl] = React.useState(null)
   const open = Boolean(anchorEl)
-  const navigate = useNavigate()
 
   const handleClick = (event) => { setAnchorEl(event.currentTarget) }
   const handleClose = () => { setAnchorEl(null) }
-  const handleLogout = () => {
-    secureLocalStorage.removeItem('token')
-    navigate('/login')
-  }
 
   return (
     <>
@@ -50,9 +47,9 @@ const BasicMenu = (props) => {
         aria-expanded={open ? 'true' : undefined}
         onClick={handleClick}
       >
-        <UserIcon />
+        { props.icon }
         <Typography sx={{ ml: 1 }} variant="button" noWrap component="div">
-          { props.user.username }
+          { props.user?.username || '' }
         </Typography>
       </IconButton>
       <Menu
@@ -64,7 +61,7 @@ const BasicMenu = (props) => {
           'aria-labelledby': 'basic-button',
         }}
       >
-        <MenuItem onClick={handleLogout}>Logout</MenuItem>
+        { props.menuItems }
       </Menu>
     </>
   )
@@ -76,8 +73,22 @@ const DashboardLayout = () => {
   const token = secureLocalStorage.getItem('token')
   const [open, setOpen] = React.useState(false)
   const [user, setUser] = React.useState(null)
+  const [notifications, setNotifications] = React.useState([])
 
   const toggleDrawer = () => { setOpen(!open) }
+
+  const handleNavigate = async (path) => {
+    if(path === '/login'){
+      secureLocalStorage.removeItem('token')
+      navigate(path)
+    } else{
+      await axios.put(`${baseUrl}/notifications/${path.id}`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      await fetchNotifications()
+      navigate(path.path)
+    }
+  }
 
   const decodeToken = async (token) => {
     setUser('loading')
@@ -86,10 +97,22 @@ const DashboardLayout = () => {
         headers: { Authorization: `Bearer ${token}` }
       })
       setUser(response.data.user)
+      fetchNotifications()
     } catch (e) {
       setUser('error')
       secureLocalStorage.removeItem('token')
       return (<></>)
+    }
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setNotifications(response.data.notifications)
+    } catch (e) {
+      console.log(e)
     }
   }
 
@@ -129,12 +152,64 @@ const DashboardLayout = () => {
               >
                 Home
               </Typography>
-              <IconButton color="inherit">
-                <Badge badgeContent={4} color="secondary">
-                  <NotificationsIcon />
-                </Badge>
-              </IconButton>
-              <BasicMenu user={user} />
+              <BasicMenu
+                menuItems={
+                  notifications.map((notification, index) => (
+                    <MenuItem
+                      sx={{
+                        backgroundColor: notification.isRead ? 'inherit' : '#ccffcc',
+                        '&:hover': {
+                          backgroundColor: notification.isRead ? 'inherit' : '#ddffdd'
+                        },
+                        marginY: 0.5,
+                        marginX: 1
+                      }}
+                      key={`${notification.id}-${index}`}
+                      onClick={handleNavigate.bind(this, notification)}>
+                      <Grid
+                        container
+                        spacing={0}
+                        sx={{
+                          maxWidth: '320px',
+                          paddingRight: '20px',
+                          overflowY: 'auto',
+                          overflowX: 'hidden'
+                        }}>
+                        <Grid item xs={9}>
+                          <Typography variant="body2" noWrap>
+                            {notification.title}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={3}>
+                          <Typography
+                            color="textSecondary"
+                            variant="caption"
+                            noWrap>
+                            {formatDate(notification.createdAt)}
+                          </Typography>
+                        </Grid>
+                        <Grid item xs={12}>
+                          <Typography variant="caption" noWrap>
+                            {notification.message}
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </MenuItem>
+                  ))
+                }
+                icon={
+                  <Badge badgeContent={
+                    notifications.filter((notification) => !notification.isRead).length
+                  } color="secondary">
+                    <NotificationsIcon />
+                  </Badge>
+                } />
+              <BasicMenu
+                menuItems={
+                  <MenuItem onClick={handleNavigate.bind(this, '/login')}>Logout</MenuItem>
+                }
+                icon={<UserIcon />}
+                user={user} />
             </Toolbar>
           </AppBar>
           <Drawer variant="permanent" open={open}>

@@ -42,6 +42,8 @@ import secureLocalStorage from 'react-secure-storage'
 import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker'
 import Modal from '../components/Modal'
 import { isInRange, isLater } from '../assets/utils'
+import { useOutletContext } from 'react-router-dom'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -477,7 +479,7 @@ const DeleteProgramForm = (props) => {
 
   const handleDelete = async () => {
     try {
-      const response = await axios.delete(`${baseUrl}/programs/${id}`, {
+      await axios.delete(`${baseUrl}/programs/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       handleSetPrograms(id, 'delete')
@@ -629,6 +631,7 @@ const SetCoursesForm = (props) => {
 }
 
 const ProgramTable = () => {
+  const user = useOutletContext()
   const baseUrl = process.env.REACT_APP_API_URL
   const [isLoading, setIsLoading] = React.useState(false)
   const [isLoaded, setIsLoaded] = React.useState(false)
@@ -737,6 +740,7 @@ const ProgramTable = () => {
       const newCourseIds = program
       const newCourses = courses.filter(course => {
         if (newCourseIds.includes(course.id)) return course
+        else return null
       })
       const newPrograms = programs.map(item => {
         if (item.id === editProgram.id) {
@@ -769,17 +773,16 @@ const ProgramTable = () => {
     setCoursesModalOpen()
   }
 
-  React.useEffect(() => {
-    if(!isLoaded) {
-      fetchAgencies()
-      fetchProgramTypes()
-      fetchCourses()
-      fetchData()  
-      setIsLoaded(true)
-    }
-  }, [isLoaded])
+  if(!isLoaded) {
+    fetchAgencies()
+    fetchProgramTypes()
+    fetchCourses()
+    fetchData()  
+    setIsLoaded(true)
+  }
 
-  if(isLoading) return <>Loading</>
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else if(isLoading) return <>Loading</>
   else if(isLoaded && !isLoading) {
     return (
       <Box sx={{ width: '100%' }}>

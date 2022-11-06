@@ -28,7 +28,9 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-  Select
+  Select,
+  TextField,
+  Link
 } from '@mui/material'
 import {
   Download,
@@ -49,6 +51,8 @@ import { useParams, useOutletContext, useNavigate } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
 import { formatDate, isLater, isInRange, capitalize } from '../assets/utils'
+import moment from 'moment'
+import NotFoundPage from './404'
 
 const StdSelect = (props) => {
   return(
@@ -194,43 +198,52 @@ const AddStudentProgramCourse = (props) => {
     }
   }
 
-  return(
-    <>
-      <List sx={{ width: '100%' }}>
-        {programCourses.map((course) => (
-          <ListItem
-            disablePadding
-            secondaryAction={
-              <Chip
-                color="primary"
-                size="small"
-                label={`${course.sks} SKS`} />
-            }
-            key={course.id}>
-            <ListItemButton
-              onClick={handleCheckCourse.bind(this, course.id)}
-              sx={{ mr: 8 }}
-              dense>
-              <ListItemIcon>
-                <Checkbox
-                  edge="start"
-                  checked={checked.includes(course.id)}
-                  tabIndex={-1}
-                  disableRipple
-                />
-              </ListItemIcon>
-              <ListItemText primary={course.name} />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-      <DialogActions>
-        <Button onClick={handleSave}>
-          Simpan
-        </Button>
-      </DialogActions>
-    </>
-  )
+  if(programCourses.length === 0){
+    return (
+      <Typography variant="subtitle1" sx={{ fontWeight: 400 }}>
+        Tidak ada mata kuliah yang tersedia untuk dikonversi.
+        Silahkan hubungi admin untuk menambahkan mata kuliah.
+      </Typography>
+    )
+  }else{
+    return(
+      <>
+        <List sx={{ width: '100%' }}>
+          {programCourses.map((course) => (
+            <ListItem
+              disablePadding
+              secondaryAction={
+                <Chip
+                  color="primary"
+                  size="small"
+                  label={`${course.sks} SKS`} />
+              }
+              key={course.id}>
+              <ListItemButton
+                onClick={handleCheckCourse.bind(this, course.id)}
+                sx={{ mr: 8 }}
+                dense>
+                <ListItemIcon>
+                  <Checkbox
+                    edge="start"
+                    checked={checked.includes(course.id)}
+                    tabIndex={-1}
+                    disableRipple
+                  />
+                </ListItemIcon>
+                <ListItemText primary={course.name} />
+              </ListItemButton>
+            </ListItem>
+          ))}
+        </List>
+        <DialogActions>
+          <Button onClick={handleSave}>
+            Simpan
+          </Button>
+        </DialogActions>
+      </>
+    )
+  }
 }
 
 const DeleteStudentProgramCourse = (props) => {
@@ -425,6 +438,9 @@ const MyProgram = () => {
   const [lecturer, setLecturer] = useState(null)
   const [checked, setChecked] = useState([])
   const [isConfirming, setIsConfirming] = useState(false)
+  const [isInputScore, setIsInputScore] = useState(false)
+  const [is404, setIs404] = useState(false)
+  const [currentId, setCurrentId] = useState(null)
 
   const handleChange = (panel) => (event, isExpanded) => {
     if(event.target.className.baseVal === '') return
@@ -434,14 +450,18 @@ const MyProgram = () => {
   }
 
   const handleFetchData = async () => {
-    let query = ``
-    if(user.role !== 'student') query = `?studentId=${studentId}`
-    else query = `?studentId=${user.id}`
-    const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    setStudentProgram(response.data.studentProgram)
-    setLecturer(response.data.studentProgram.lecturer)
+    try {
+      let query = ``
+      if(user.role !== 'student') query = `?studentId=${studentId}`
+      else query = `?studentId=${user.id}`
+      const response = await axios.get(`${baseUrl}/student-programs/${id}${query}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setStudentProgram(response.data.studentProgram)
+      setLecturer(response.data.studentProgram.lecturer)
+    } catch (err) {
+      setIs404(true)
+    }
   }
 
   const handleFetchLecturers = async () => {
@@ -452,11 +472,17 @@ const MyProgram = () => {
   }
 
   const handleFetchStudentProgramCourses = async () => {
-    const response = await axios.get(`${baseUrl}/student-programs/${id}/courses`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-    setStudentProgramCourses(response.data.studentProgramCourses)
-    setTotalSks(response.data.totalSks)
+    try {
+      let query = ``
+      if(user.role !== 'student') query = `?studentId=${studentId}`
+      const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setStudentProgramCourses(response.data.studentProgramCourses)
+      setTotalSks(response.data.totalSks)
+    } catch (err) {
+      setIs404(true)
+    }
   }
 
   const handleSetNotAddedCourses = (allData, addedData) => {
@@ -469,6 +495,8 @@ const MyProgram = () => {
   }
 
   const fetchStudentProgram = async () => {
+    setCurrentId(id)
+    setIs404(false)
     setIsLoading(true)
     setIsLoaded(false)
     try {
@@ -476,7 +504,7 @@ const MyProgram = () => {
       await handleFetchStudentProgramCourses()
       await handleFetchLecturers()
     } catch (e) {
-      console.log(e)
+      setIs404(true)
     }
     setIsLoading(false)
     setIsLoaded(true)
@@ -530,6 +558,34 @@ const MyProgram = () => {
     }
   }
 
+  const handleScoreSubmit = async (e) => {
+    e.preventDefault()
+    let data = JSON.parse(e.target.data.value)
+    let achievementCodes = []
+    let scores = []
+    data.course.cpmks.forEach(cpmk => {
+      achievementCodes.push(cpmk.achievementCode)
+      scores.push(e.target[cpmk.achievementCode].value)
+    })
+    const payload = {
+      studentId: data.studentId,
+      programId: data.programId,
+      courseId: data.courseId,
+      achievementCodes: achievementCodes,
+      scores: scores
+    }
+
+    await axios.put(`${baseUrl}/student-programs/${data.programId}/course-achievements/${data.courseId}`,
+      payload,
+      { headers: { Authorization: `Bearer ${token}` } }
+    )
+    await handleFetchStudentProgramCourses()
+    setAlertMessage('Berhasil menginput nilai')
+    setAlertStatus('success')
+    setShowAlert(true)
+    setIsInputScore(false)
+  }
+
   const callback = (msg, status = 'success') => {
     setAlertMessage(msg)
     setAlertStatus(status)
@@ -548,11 +604,16 @@ const MyProgram = () => {
 
   useEffect(() => {
     if (!isLoaded && !isLoading) fetchStudentProgram()
-    else if (isLoaded && parseInt(studentProgram.programId) !== parseInt(id))
+    else if (
+      isLoaded &&
+      !is404 &&
+      parseInt(studentProgram?.programId) !== parseInt(id))
       fetchStudentProgram()
+    else if (is404 && currentId !== id) fetchStudentProgram()
   })
 
-  if (isLoading) {
+  if (is404) return <NotFoundPage />
+  else if (isLoading) {
     return (
       <>Loading</>
     )
@@ -613,7 +674,13 @@ const MyProgram = () => {
             }}
           >
             <Typography variant='h6'>
-              Program Saya - { studentProgram.program.name }
+              Program Saya - <Link
+              href='#'
+              underline='none'
+              onClick={(e) => {
+                e.preventDefault()
+                navigate(`/programs/${id}`)
+              }}>{ studentProgram.program.name }</Link>
             </Typography>
   
             <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
@@ -658,7 +725,12 @@ const MyProgram = () => {
                 <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
                   {user.role === 'student' &&
                     <Button
-                      disabled={totalSks === studentProgram.program.sksCount}
+                      disabled={
+                        (totalSks === studentProgram.program.sksCount) ||
+                        (studentProgram.status === 'rejected') ||
+                        (studentProgram.status === 'accepted' &&
+                        !isLater(studentProgram.program.endsAt))
+                      }
                       onClick={handleAddStudentProgramCourse}
                       variant='contained'
                       color='primary'
@@ -691,11 +763,13 @@ const MyProgram = () => {
                   > 
                     {user.role === 'student' &&
                       <IconButton
+                        disabled={item.status === 'accepted'}
                         size="small"
                         color="error"
                         onClick={handleDeleteStudentProgramCourse.bind(this, item)}
                         sx={{ ml: -3, mr: 1, mt: -1 }} >
-                          <Delete />
+                          <Delete
+                            visibility={item.status === 'accepted' ? 'hidden' : 'visible'} />
                       </IconButton>
                     }{user.role === 'lecturer' &&
                       <Checkbox
@@ -725,31 +799,90 @@ const MyProgram = () => {
                       }
                       size="small"
                       sx={{ marginLeft: 1 }}/>
+                    <Chip
+                      label={`Nilai : ${item.score || '-'}`}
+                      color="info"
+                      size="small"
+                      sx={{ marginLeft: 1 }}/>
                   </AccordionSummary>
                   <AccordionDetails>
                     <Typography variant='body2'>
-                      Total jam konversi: <b>24 jam 17 menit</b> dari <b>48 jam</b>
+                      Total jam konversi: <b>{moment.duration(item.progress).asHours().toFixed(2)} jam</b> dari <b>{moment.duration(item.timeNeeded).asHours().toFixed(2)} jam</b>
                     </Typography>
                     <LinearProgress 
                       variant="determinate" 
-                      value={ ((24/48)+((17/60)/48))*100 } 
+                      value={ (item.progress/item.timeNeeded)*100 } 
                       sx={{ width: '100%', marginTop: 1 }} />
-                    <Typography variant='body1' sx={{ marginTop: 3 }}>
-                      Daftar CPMK:
-                    </Typography>
+                      
+                    <Grid container spacing={2} sx={{ marginTop: 1 }}>
+                      <Grid item xs={6}>
+                        <Typography variant='body1'>
+                          Daftar CPMK:
+                        </Typography>
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                          <Button
+                            onClick={
+                              () => {
+                                let action = user.role === 'lecturer' ?
+                                setIsInputScore(item.courseId) :
+                                null
+                                return action
+                              }
+                            }>
+                            Nilai
+                          </Button>
+                        </Box>
+                      </Grid>
+                    </Grid>
+                      
                     <List sx={{ width: '100%', bgcolor: 'background.paper' }}>
-                      {item.course?.cpmks?.map((cpmk, index) => (
-                        <ListItem sx={{ padding: 0}} key={cpmk.achievementCode}>
-                          <ListItemIcon>
-                            <ArrowRight sx={{ padding: 0 }} />
-                          </ListItemIcon>
-                          <ListItemText>
-                            <Typography variant='overline'>
-                              {cpmk.achievementCode} - {cpmk.title}
-                            </Typography>
-                          </ListItemText>
-                        </ListItem>
-                      ))}
+                      <form onSubmit={handleScoreSubmit}>
+                        {item.course?.cpmks?.map((cpmk, index) => (
+                          <ListItem
+                            sx={{ padding: 0}}
+                            key={cpmk.achievementCode}>
+                            <ListItemIcon>
+                              <ArrowRight sx={{ padding: 0 }} />
+                            </ListItemIcon>
+                            <ListItemText
+                              primary={`${cpmk.achievementCode} - ${cpmk.cpmk.title}`}
+                              secondary={`Bobot penilaian: ${cpmk.cpmk.weight}`} >
+                            </ListItemText>
+                            <ListItemText sx={{ textAlign: 'right' }}>
+                              { (isInputScore === item.courseId && user.role === 'lecturer') &&
+                                <TextField
+                                  name={cpmk.achievementCode}
+                                  autoComplete='off'
+                                  sx={{ width: '52px', paddingRight: 1 }}
+                                  variant='standard'
+                                  size='small'
+                                  defaultValue={cpmk.score}
+                                  type='number' />
+                              }
+                              { isInputScore !== item.courseId &&
+                                <Typography variant='overline'>
+                                  { cpmk.score || '-' }
+                                </Typography>
+                              }
+                            </ListItemText>
+                          </ListItem>
+                        ))}
+                        { isInputScore === item.courseId &&
+                          <Box sx={{
+                            display: 'flex',
+                            marginTop: 2,
+                            marginBottom: 0,
+                            justifyContent: 'flex-end' }}>
+                            <Button onClick={() => setIsInputScore(null) }>Batal</Button>
+                            <Button
+                              value={JSON.stringify(item)}
+                              name='data'
+                              type='submit'>Simpan</Button>
+                          </Box>
+                        }
+                      </form>
                     </List>
                   </AccordionDetails>
                 </Accordion>
@@ -788,7 +921,7 @@ const MyProgram = () => {
                   <>
                     <Chip label="Ditolak" color="error" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
-                      Mohon maaf permohonan pendaftaran anda ditolak. Silakan hubungi jurusan untuk informasi lebih lanjut.
+                      {studentProgram.reason}
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' && isLater(studentProgram.program.startsAt) &&
@@ -806,7 +939,7 @@ const MyProgram = () => {
                     </Typography>
                   </>
                 } { studentProgram.status === 'accepted' &&
-                  !isLater(new Date(studentProgram.program.closeAt).setDate(new Date(studentProgram.program.closeAt).getDate() + 1)) &&
+                  !isLater(studentProgram.program.endsAt) &&
                   <>
                     <Chip label="Selesai" color="primary" size="small" sx={{ marginTop: 1 }}/>
                     <Typography variant='caption' align="center">
@@ -869,7 +1002,9 @@ const MyProgram = () => {
                       navigate(`/students/${studentProgram.studentId}/logbooks/${studentProgram.programId}`)
                     }
                   }}
-                  disabled={false}
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status)
+                  }
                   variant='outlined'
                   color='primary'
                   size="small"
@@ -880,22 +1015,61 @@ const MyProgram = () => {
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Laporan Akhir
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
+                <Button
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
+                  onClick={
+                    studentProgram.completionFile ?
+                    handleFileDownload.bind(this, studentProgram.completionFile) :
+                    handleUploadFile.bind(this, 'completionFile')
+                  }
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.completionFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.completionFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
   
                 <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
                   Dokumen Poster
                 </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
-                </Button>
-  
-                <Typography variant='subtitle2' sx={{ marginTop: 2 }}>
-                  Rekap Nilai
-                </Typography>
-                <Button disabled variant='outlined' color='primary' size="small" startIcon={<Lock />}>
-                  Terkunci
+                <Button
+                  disabled={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt)
+                  }
+                  onClick={
+                    studentProgram.posterFile ?
+                    handleFileDownload.bind(this, studentProgram.posterFile) :
+                    handleUploadFile.bind(this, 'posterFile')
+                  }
+                  variant='outlined'
+                  color='primary'
+                  size="small"
+                  startIcon={
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt) ?
+                    <Lock /> : !studentProgram.posterFile ?
+                    <Upload /> : <Download />
+                  }>
+                  {
+                    ['applied', 'rejected'].includes(studentProgram.status) ||
+                    !!isLater(studentProgram.program.endsAt) ?
+                    'Terkunci' : !studentProgram.posterFile ?
+                    'Unggah' : 'Unduh'
+                  }
                 </Button>
               </Paper>
             </Grid>
