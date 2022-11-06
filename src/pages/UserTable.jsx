@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useState }from 'react'
 import {
   Box,
   Table,
@@ -13,8 +13,10 @@ import {
   IconButton,
   Tooltip
 } from '@mui/material'
-import { Delete, Edit, Sync } from '@mui/icons-material'
+import { Sync } from '@mui/icons-material'
 import { useOutletContext } from 'react-router-dom'
+import secureLocalStorage from 'react-secure-storage'
+import axios from 'axios'
 import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
@@ -32,9 +34,6 @@ const EnhancedTableHead = () => {
         </TableCell>
         <TableCell >
           Role
-        </TableCell>
-        <TableCell >
-          Action
         </TableCell>
       </TableRow>
     </TableHead>
@@ -71,6 +70,22 @@ const EnhancedTableToolbar = () => {
 
 const UsersTable = () => {
   const user = useOutletContext()
+  const token = secureLocalStorage.getItem('token')
+  const baseUrl = process.env.REACT_APP_API_URL
+  const [users, setUsers] = useState(null)
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/users`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      setUsers(response.data.users)
+    } catch (error) {
+      console.log(error)
+    }
+  }
+
+  if(users === null) fetchUsers()
 
   if(user?.role !== 'admin') return <NotFoundPage />
   else{
@@ -86,24 +101,18 @@ const UsersTable = () => {
             >
               <EnhancedTableHead />
               <TableBody>
-                <TableRow hover >
-                  <TableCell>1</TableCell>
-                  <TableCell>Husnil Kamil</TableCell>
-                  <TableCell>
-                    199607302010121001
-                  </TableCell>
-                  <TableCell>
-                    Lecturer
-                  </TableCell>
-                  <TableCell sx={{ width: '120px' }}>
-                    <IconButton color='warning'>
-                      <Edit />
-                    </IconButton>
-                    <IconButton color='error'>
-                      <Delete />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
+                {users?.map((user, index) => (
+                  <TableRow hover key={user.id}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{user.name}</TableCell>
+                    <TableCell>
+                      {user.username}
+                    </TableCell>
+                    <TableCell>
+                      {user.role}
+                    </TableCell>
+                  </TableRow>
+                ))}
               </TableBody>
             </Table>
           </TableContainer>
