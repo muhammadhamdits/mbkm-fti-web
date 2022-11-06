@@ -773,17 +773,16 @@ const ProgramTable = () => {
     setCoursesModalOpen()
   }
 
-  if(!isLoaded) {
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else if(isLoading) return <>Loading</>
+  else if(!isLoaded) {
     fetchAgencies()
     fetchProgramTypes()
     fetchCourses()
     fetchData()  
     setIsLoaded(true)
   }
-
-  if(user?.role !== 'admin') return <NotFoundPage />
-  else if(isLoading) return <>Loading</>
-  else if(isLoaded && !isLoading) {
+  else{
     return (
       <Box sx={{ width: '100%' }}>
         <Modal

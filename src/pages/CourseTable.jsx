@@ -1,4 +1,4 @@
-import * as React from 'react'
+import { useState } from 'react'
 import {
   AddOutlined,
   Delete,
@@ -83,12 +83,12 @@ const EnhancedTableToolbar = () => {
 
 const CPMKList = (props) => {
   const { data, baseUrl, token, callback } = props
-  const [cpmks, setCpmks] = React.useState([])
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isLoaded, setIsLoaded] = React.useState(false)
-  const [showAlert, setShowAlert] = React.useState(false)
-  const [alertMsg, setAlertMsg] = React.useState('')
-  const [alertSeverity, setAlertSeverity] = React.useState('error')
+  const [cpmks, setCpmks] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [showAlert, setShowAlert] = useState(false)
+  const [alertMsg, setAlertMsg] = useState('')
+  const [alertSeverity, setAlertSeverity] = useState('error')
 
   const fetchCPMKs = async () => {
     setIsLoading(true)
@@ -158,11 +158,9 @@ const CPMKList = (props) => {
     setShowAlert(true)
   }
 
-  React.useEffect(() => {
-    if(!isLoaded && !isLoading) fetchCPMKs()
-  })
-
+  
   if(isLoading) return <div>Loading...</div>
+  else if(!isLoaded && !isLoading) fetchCPMKs()
   else{
     return (
       <>
@@ -183,49 +181,59 @@ const CPMKList = (props) => {
             Tambah CPMK
           </Button>
         </DialogActions>
-        {cpmks.map((cpmk, index) => (
-          <Grid container spacing={2} key={`${index}-gc`} sx={{ mb: 1 }}>
-            <Grid item xs={3} key={`${index}-gl`}>
-              <TextField
-                required
-                fullWidth
-                label="Kode CPMK"
-                variant="standard"
-                value={cpmk.achievementCode}
-                onChange={handleCodeChange.bind(this, index)}
-                key={`${index}-kc`} />
+        {
+          cpmks.length > 0 ?
+          cpmks.map((cpmk, index) => (
+            <Grid container spacing={2} key={`${index}-gc`} sx={{ mb: 1 }}>
+              <Grid item xs={3} key={`${index}-gl`}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Kode CPMK"
+                  variant="standard"
+                  value={cpmk.achievementCode}
+                  onChange={handleCodeChange.bind(this, index)}
+                  key={`${index}-kc`} />
+              </Grid>
+              <Grid item xs={6} key={`${index}-gml`}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Nama CPMK"
+                  variant="standard"
+                  value={cpmk.title}
+                  onChange={handleTitleChange.bind(this, index)}
+                  key={`${index}-nc`} />
+              </Grid>
+              <Grid item xs={2} key={`${index}-gmr`}>
+                <TextField
+                  required
+                  fullWidth
+                  label="Bobot"
+                  variant="standard"
+                  value={cpmk.weight}
+                  onChange={handleWeightChange.bind(this, index)}
+                  key={`${index}-bc`} />
+              </Grid>
+              <Grid item xs={1} key={`${index}-gr`} >
+                <IconButton
+                  sx={{ paddingTop: 2, paddingLeft: 0 }}
+                  color="error"
+                  key={`${index}-ic`}
+                  onClick={removeCPMK.bind(this, index)} >
+                    <Delete />
+                </IconButton>
+              </Grid>
             </Grid>
-            <Grid item xs={6} key={`${index}-gml`}>
-              <TextField
-                required
-                fullWidth
-                label="Nama CPMK"
-                variant="standard"
-                value={cpmk.title}
-                onChange={handleTitleChange.bind(this, index)}
-                key={`${index}-nc`} />
-            </Grid>
-            <Grid item xs={2} key={`${index}-gmr`}>
-              <TextField
-                required
-                fullWidth
-                label="Bobot"
-                variant="standard"
-                value={cpmk.weight}
-                onChange={handleWeightChange.bind(this, index)}
-                key={`${index}-bc`} />
-            </Grid>
-            <Grid item xs={1} key={`${index}-gr`} >
-              <IconButton
-                sx={{ paddingTop: 2, paddingLeft: 0 }}
-                color="error"
-                key={`${index}-ic`}
-                onClick={removeCPMK.bind(this, index)} >
-                  <Delete />
-              </IconButton>
+          )) :
+          <Grid container spacing={2} sx={{ mb: 1, minWidth: '360px' }}>
+            <Grid item xs={12} key="0-gc">
+              <Typography variant="body2" color="text.secondary" align="center">
+                Belum ada CPMK
+              </Typography>
             </Grid>
           </Grid>
-        ))}
+        }
         <DialogActions>
           <Button
             onClick={handleSaveCPMKs} >
@@ -241,11 +249,11 @@ const CourseTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
   const user = useOutletContext()
   const token = secureLocalStorage.getItem('token')
-  const [courses, setCourses] = React.useState([])
-  const [course, setCourse] = React.useState({})
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isLoaded, setIsLoaded] = React.useState(false)
-  const [open, setOpen] = React.useState(false)
+  const [courses, setCourses] = useState([])
+  const [course, setCourse] = useState({})
+  const [isLoading, setIsLoading] = useState(false)
+  const [isLoaded, setIsLoaded] = useState(false)
+  const [open, setOpen] = useState(false)
 
   const fetchCourses = async () => {
     setIsLoading(true)
@@ -274,13 +282,11 @@ const CourseTable = () => {
     setModalOpen()
   }
 
-  React.useEffect(() => {
-    if(!isLoaded && !isLoading) fetchCourses()
-  })
-
+  
   if(user?.role !== 'admin') return <NotFoundPage />
+  else if(!isLoaded && !isLoading) fetchCourses()
   else if(isLoading) return <>Loading</>
-  else if(isLoaded && courses) {
+  else if(isLoaded) {
     return (
       <Box sx={{ width: '100%' }}>
         <Modal
@@ -304,30 +310,38 @@ const CourseTable = () => {
             >
               <EnhancedTableHead />
               <TableBody>
-                {courses.map((course, index) => (
-                  <TableRow hover key={course.id}>
-                    <TableCell>{index + 1}</TableCell>
-                    <TableCell>{course.name}</TableCell>
-                    <TableCell>{course.sks} SKS</TableCell>
-                    <TableCell>
-                      <Button
-                        variant="outlined"
-                        color="primary"
-                        size="small"
-                        onClick={handleCPMKClick.bind(this, course)}
-                        startIcon={<Edit />}>
-                        CPMK
-                      </Button>
+                { 
+                  courses.length > 0 ?
+                  courses.map((course, index) => (
+                    <TableRow hover key={course.id}>
+                      <TableCell>{index + 1}</TableCell>
+                      <TableCell>{course.name}</TableCell>
+                      <TableCell>{course.sks} SKS</TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          color="primary"
+                          size="small"
+                          onClick={handleCPMKClick.bind(this, course)}
+                          startIcon={<Edit />}>
+                          CPMK
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  )) :
+                  <TableRow>
+                    <TableCell colSpan={4} align="center">
+                      Tidak ada data
                     </TableCell>
                   </TableRow>
-                ))}
+                }
               </TableBody>
             </Table>
           </TableContainer>
         </Paper>
       </Box>
     )
-  } else  return <>Empty</>
+  }
 }
 
 export default CourseTable
