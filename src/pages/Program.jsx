@@ -36,28 +36,32 @@ const RegisterProgramForm = (props) => {
   }
 
   const handleSubmit = async () => {
-    setIsLoading(true)
-    const studentProgram = await axios.post(`${baseUrl}/programs/${program.id}/register`, {}, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
+    try{
+      setIsLoading(true)
+      const studentProgram = await axios.post(`${baseUrl}/programs/${program.id}/register`, {}, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
 
-    const formData = new FormData()
+      const formData = new FormData()
 
-    formData.append('file', file)
-    const objectName = 'StudentProgram'
-    const objectField = 'advisorRecommendationFile'
-    const objectIdString = JSON.stringify({
-      studentId: studentProgram.data.studentProgram.studentId,
-      programId: studentProgram.data.studentProgram.programId
-    })
-    const query = `objectName=${objectName}&objectId=${objectIdString}&objectField=${objectField}`
+      formData.append('file', file)
+      const objectName = 'StudentProgram'
+      const objectField = 'advisorRecommendationFile'
+      const objectIdString = JSON.stringify({
+        studentId: studentProgram.data.studentProgram.studentId,
+        programId: studentProgram.data.studentProgram.programId
+      })
+      const query = `objectName=${objectName}&objectId=${objectIdString}&objectField=${objectField}`
 
-    await axios.post(`${baseUrl}/upload?${query}`,
-      formData,
-      { headers: { Authorization: `Bearer ${token}` } }
-    )
-    setIsLoading(false)
-    callback()
+      await axios.post(`${baseUrl}/upload?${query}`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      )
+      setIsLoading(false)
+      callback('success')
+    } catch (err) {
+      callback(err.response.data.message)
+    }
   }
 
   if (isLoading) {
@@ -142,10 +146,10 @@ const Program = () => {
     } catch (e) { setIs404(true) }
   }
 
-  const callback = async () => {
+  const callback = async (severity) => {
     setModalOpen()
     setIsRegistered(true)
-    setShowAlert(true)
+    setShowAlert(severity)
   }
 
   if(!is404 && !program) fetchProgram()
@@ -155,12 +159,17 @@ const Program = () => {
   else{
     return (
       <Grid container spacing={2}>
-        {showAlert &&
-          <Alert severity="success">
+        { 
+          showAlert === 'success' ?
+          <Alert severity="success" sx={{ width: '100%' }}>
             <AlertTitle>Sukses</AlertTitle>
             Kamu telah berhasil mengajukan pendaftaran program ini. Silahkan tunggu konfirmasi dari admin.
             Kamu bisa melihat status pendaftaran kamu di halaman <Link to={`/my-programs/${program.id}`} style={{ textDecoration: 'none', color: '#3f50b5' }}>Program Saya</Link>.
-          </Alert>
+          </Alert> : !!showAlert ?
+          <Alert severity='error' sx={{ width: '100%' }}>
+            <AlertTitle>Gagal</AlertTitle>
+            {showAlert}
+          </Alert> : null
         }
         <Modal
           open={open}
