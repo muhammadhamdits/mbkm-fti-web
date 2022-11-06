@@ -12,11 +12,12 @@ import {
 import { Upload } from '@mui/icons-material'
 import { useParams, useOutletContext, Link } from 'react-router-dom'
 import secureLocalStorage from 'react-secure-storage'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useRef } from 'react'
 import { formatDate, countMonthsDays, isInRange, isLater } from '../assets/utils'
 import ListItem from '../components/ListItem'
 import Modal from '../components/Modal'
 import axios from 'axios'
+import NotFoundPage from './404'
 
 const RegisterProgramForm = (props) => {
   const { token, baseUrl, callback, program } = props
@@ -121,27 +122,24 @@ const Program = () => {
   const { id } = useParams()
   const baseUrl = process.env.REACT_APP_API_URL
   const token = secureLocalStorage.getItem('token')
-  const [program, setProgram] = useState({})
+  const [program, setProgram] = useState(null)
   const [open, setOpen] = useState(false)
   const [isRegistered, setIsRegistered] = useState(false)
   const [showAlert, setShowAlert] = useState(false)
+  const [is404, setIs404] = useState(false)
 
   const setModalOpen = () => {
     setOpen(!open)
   }
 
   const fetchProgram = async () => {
-    setProgram({ loading: true })
     try {
       const response = await axios.get(`${baseUrl}/programs/${id}`, {
         headers: { Authorization: `Bearer ${token}` }
       })
       setProgram(response.data.program)
       setIsRegistered(response.data.isRegistered)
-    } catch (e) {
-      setProgram({ empty: true })
-      console.log(e)
-    }
+    } catch (e) { setIs404(true) }
   }
 
   const callback = async () => {
@@ -150,12 +148,12 @@ const Program = () => {
     setShowAlert(true)
   }
 
-  useEffect(() => { if (!Object.keys(program).length) fetchProgram() })
+  if(!is404 && !program) fetchProgram()
 
-  return (
-    <>
-    {
-      program.id &&
+  if (is404) return <NotFoundPage />
+  else if (!program) return <CircularProgress />
+  else{
+    return (
       <Grid container spacing={2}>
         {showAlert &&
           <Alert severity="success">
@@ -298,9 +296,8 @@ const Program = () => {
           </Grid>
         </Grid>
       </Grid>
-    }
-    </>
-  )
+    )
+  }
 }
 
 export default Program

@@ -27,8 +27,10 @@ import {
 } from '@mui/material'
 import axios from 'axios'
 import secureLocalStorage from 'react-secure-storage'
+import { useOutletContext } from 'react-router-dom'
 import Modal from '../components/Modal'
 import { capitalize } from '../assets/utils'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -158,7 +160,7 @@ const CPMKList = (props) => {
 
   React.useEffect(() => {
     if(!isLoaded && !isLoading) fetchCPMKs()
-  }, [isLoaded, isLoading])
+  })
 
   if(isLoading) return <div>Loading...</div>
   else{
@@ -237,6 +239,7 @@ const CPMKList = (props) => {
 
 const CourseTable = () => {
   const baseUrl = process.env.REACT_APP_API_URL
+  const user = useOutletContext()
   const token = secureLocalStorage.getItem('token')
   const [courses, setCourses] = React.useState([])
   const [course, setCourse] = React.useState({})
@@ -273,9 +276,10 @@ const CourseTable = () => {
 
   React.useEffect(() => {
     if(!isLoaded && !isLoading) fetchCourses()
-  }, [isLoaded, isLoading])
+  })
 
-  if(isLoading) return <>Loading</>
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else if(isLoading) return <>Loading</>
   else if(isLoaded && courses) {
     return (
       <Box sx={{ width: '100%' }}>

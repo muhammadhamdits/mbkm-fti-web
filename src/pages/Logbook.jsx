@@ -31,6 +31,8 @@ import axios from 'axios'
 import moment from 'moment'
 import secureLocalStorage from 'react-secure-storage'
 import Modal from '../components/Modal'
+import NotFoundPage from './404'
+import { isInRange } from '../assets/utils'
 
 const CreateLogbookForm = (props) => {
   const { baseUrl, token, callback, courses, programId } = props
@@ -250,24 +252,27 @@ const UpdateLogbookForm = (props) => {
   )
 }
 
-const MyProgram = () => {  
+const LogbookPage = () => {  
+  const navigate = useNavigate()
   let query = ''
   let { id, programId, studentId } = useParams()
   const user = useOutletContext()
-  if(user.role === 'lecturer') {
-    id = programId
-    query = `?studentId=${studentId}`
-  }
-  const navigate = useNavigate()
   const token = secureLocalStorage.getItem('token')
   const baseUrl = process.env.REACT_APP_API_URL
   const [logbooks, setLogbooks] = useState([])
   const [logbook, setLogbook] = useState(null)
+  const [studentProgram, setStudentProgram] = useState(null)
   const [studentProgramCourses, setStudentProgramCourses] = useState([])
   const [loaded, setLoaded] = useState(false)
   const [Loading, setLoading] = useState(false)
   const [open, setOpen] = useState(false)
+  const [is404, setIs404] = useState(false)
   const [state, setState] = useState('create')
+  
+  if(user.role === 'lecturer') {
+    id = programId
+    query = `?studentId=${studentId}`
+  }
 
   const setModalOpen = () => {
     setOpen(!open)
@@ -301,6 +306,18 @@ const MyProgram = () => {
     return response.data.logbooks
   }
 
+  const fetchStudentProgram = async () => {
+    try {
+      const response = await axios.get(`${baseUrl}/student-programs/${id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      })
+      if(response.data.studentProgram?.status === 'accepted') return response.data.studentProgram
+      else setIs404(true)
+    } catch (error) {
+      setIs404(true)
+    }
+  }
+
   const fetchStudentProgramCourses = async () => {
     const response = await axios.get(`${baseUrl}/student-programs/${id}/courses${query}`, {
       headers: { Authorization: `Bearer ${token}` }
@@ -313,6 +330,7 @@ const MyProgram = () => {
 
   const fetchData = async () => {
     setLogbooks(await fetchLogbooks())
+    setStudentProgram(await fetchStudentProgram())
     setStudentProgramCourses(await fetchStudentProgramCourses())
   }
   
@@ -324,7 +342,8 @@ const MyProgram = () => {
     })
   }
 
-  if(loaded){
+  if(is404 || (user.role !== 'lecturer' && studentId)) return <NotFoundPage />
+  else if(loaded){
     return (
       <Grid container spacing={2}>
         <Modal
@@ -355,13 +374,18 @@ const MyProgram = () => {
             }}
           >
             <Typography variant='h6'>
-              Logbook - Backend Developer Intern
+              Logbook - {studentProgram.program.name}
             </Typography>
             
             { user.role === 'student' && (
                 <Box sx={{ mt: 2, justifyContent: 'flex-end', display: 'flex' }}>
                   <Button
                     onClick={() => handleButtonClick()}
+                    disabled={!isInRange(
+                      new Date(),
+                      studentProgram.program.startsAt,
+                      studentProgram.program.endsAt
+                    )}
                     variant='contained'
                     color='primary'
                     size='small'>
@@ -410,4 +434,4 @@ const MyProgram = () => {
   }else return <>Loading</>
 }
 
-export default MyProgram
+export default LogbookPage

@@ -14,6 +14,7 @@ import UserTable from './pages/UserTable'
 import { AdapterMoment } from '@mui/x-date-pickers/AdapterMoment'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import LogbookDetail from './pages/LogbookDetail'
+import NotFoundPage from './pages/404'
 
 const App = () => {
   return (
@@ -38,6 +39,7 @@ const App = () => {
             <Route path="/student-programs/:id/:studentId" element={<MyProgram />} />
             <Route path="/agencies" element={<AgencyTable />} />
             <Route path="/users" element={<UserTable />} />
+            <Route path="*" element={<NotFoundPage />} />
           </Route>
         </Routes>
       </BrowserRouter>

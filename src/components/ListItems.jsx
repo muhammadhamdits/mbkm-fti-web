@@ -39,18 +39,15 @@ const ListItems = (props) => {
       <React.Fragment>
         <ListItemButton icon={ <HomeIcon /> } path='/' name='Home'/>
         { props.user.role === 'student' &&
-          <>
-            { studentPrograms.map((program) => {
-              return (
-                <ListItemButton
-                  key={ program.programId }
-                  icon={ <School /> }
-                  path={`/my-programs/${program.programId}`}
-                  name={program.program.name}/>
-              )
-            })}
-            <ListItemButton icon={ <Assignment /> } path='/logbooks/1' name='Logbook'/>
-          </>
+          studentPrograms.map((program) => {
+            return (
+              <ListItemButton
+                key={ program.programId }
+                icon={ <School /> }
+                path={`/my-programs/${program.programId}`}
+                name={program.program.name}/>
+            )
+          })
         }
         { ['admin', 'lecturer'].includes(props.user.role) &&
           <ListItemButton icon={ <School /> } path='/student-programs' name='Student Program'/>

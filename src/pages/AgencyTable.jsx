@@ -15,8 +15,10 @@ import { Add, Delete, Edit } from '@mui/icons-material'
 import Modal from '../components/Modal'
 import axios from 'axios'
 import secureLocalStorage from 'react-secure-storage'
+import { useOutletContext } from 'react-router-dom'
 import { DialogActions, Grid, TextField, Button } from '@mui/material'
 import { capitalize } from '../assets/utils'
+import NotFoundPage from './404'
 
 const EnhancedTableHead = () => {
   return (
@@ -155,6 +157,7 @@ const AgencyForm = (props) => {
 }
 
 const AgencyTable = () => {
+  const user = useOutletContext()
   const [open, setOpen] = React.useState(false)
   const [isLoading, setIsLoading] = React.useState(false)
   const [isLoaded, setIsLoaded] = React.useState(false)
@@ -206,11 +209,10 @@ const AgencyTable = () => {
     handleShowModal()
   }
 
-  React.useEffect(() => {
-    if(!isLoaded && !isLoading) fetchAgencies()
-  }, [isLoaded, isLoading])
+  if(!isLoaded && !isLoading) fetchAgencies()
 
-  if(isLoading) return <div>Loading...</div>
+  if(user?.role !== 'admin') return <NotFoundPage />
+  else if(isLoading) return <div>Loading...</div>
   else if(isLoaded && agencies.length){
     return (
       <Box sx={{ width: '100%' }}>
